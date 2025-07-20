@@ -1,0 +1,96 @@
+{
+	"models": [
+		{"id": "ge",   "model": "assets/models/cast_Mesh.6268.mgcg", "format":"MGCG"},
+		{"id": "floor",   "model": "assets/models/Dungeon.Floor.obj", "format":"OBJ"},
+		{"id": "walls",   "model": "assets/models/Dungeon.Walls.obj", "format":"OBJ"},
+		{"id": "barrel2",   "model": "assets/models/barrel.002_Mesh.4450.mgcg", "format":"MGCG"},
+		{"id": "box1", "model": "assets/models/box1.mgcg", "format": "MGCG"},
+		{"id": "box2", "model": "assets/models/box2.mgcg", "format": "MGCG"},
+		{"id": "cupboard1", "model": "assets/models/cupboard1.mgcg", "format": "MGCG"},
+		{"id": "decoration1", "model": "assets/models/decoration1.mgcg", "format": "MGCG"},
+		{"id": "axis", "model": "assets/models/axis.obj", "format": "OBJ"}
+
+		],
+	"textures": [
+		{"id": "t0", "texture": "assets/textures/Textures_Dungeon.png"},
+		{"id": "floor", "texture": "assets/textures/floor.png"},
+		{"id": "walls", "texture": "assets/textures/walls.png"}
+	],
+	"instances": [
+		{"id": "ge",   "model": "ge",   "texture": "t0",
+		 "transform": [5, 0, 0, 60,
+					   0, 5, 0, 5,
+					   0, 0, 5, 0,
+					   0, 0, 0, 1]},
+		{"id": "floor",   "model": "floor",   "texture": "floor",
+					 "transform": [20, 0, 0, 0,
+					   0, 20, 0, 0,
+					   0, 0, 20, 0,
+					   0, 0, 0, 1]},
+		{"id": "walls",   "model": "walls",   "texture": "walls",
+					 "transform": [20, 0, 0, 0,
+					   0, 10, 0, 0,
+					   0, 0, 20, 0,
+					   0, 0, 0, 1]},
+		{
+			"id": "barrel2",   "model": "barrel2",   "texture": "t0",
+			"transform": [5, 0, 0, 60,
+					   0, 5, 0, 2.5,
+					   0, 0, 5, -25,
+					   0, 0, 0, 1]
+		},
+		{
+			"id": "box1",   "model": "box1",   "texture": "t0",
+			"transform": [0, 0, 5, 0,
+					   0, 5, 0, 2.5,
+					   -5, 0, 0, 0,
+					   0, 0, 0, 1]
+		},
+		{
+			"id": "box2",   "model": "box2",   "texture": "t0",
+			"transform": [
+				0.0, 0.0, -5.0, 100.0,
+				0.0, 5.0, 0.0, 2.5,
+				5.0, 0.0, 0.0,0.0,
+				0.0, 0.0, 0.0, 1.0
+			]
+		},
+		{
+			"id": "box3",   "model": "box1",   "texture": "t0",
+			"transform": [0, 0, -5, 83.8793,
+				0, 5, 0, 2.5,
+				5, 0, 0, 20,
+				0, 0, 0, 1]
+		},
+		{
+			"id": "cupboard1",   "model": "cupboard1",   "texture": "t0",
+			"transform": [0, 0, -5, 87,
+				0, 5, 0, 2.5,
+				5, 0, 0, -20,
+				0, 0, 0, 1]
+		},
+		{
+			"id": "cupboard1",   "model": "cupboard1",   "texture": "t0",
+			"transform": [0, 0, -5, 87,
+				0, 5, 0, 2.5,
+				5, 0, 0, -30,
+				0, 0, 0, 1]
+		},
+		{
+			"id": "decoration1",   "model": "decoration1",   "texture": "t0",
+			"transform": [3, 0, 0, 70,
+				0, 3, 0, 2.5,
+				0, 0, 3, 0,
+				0, 0, 0, 1]
+		},
+		{
+			"id": "axis",   "model": "axis",   "texture": "t0",
+			"transform": [5, 0, 0, 215,
+				0, 5, 0, 5,
+				0, 0, 5, -155,
+				0, 0, 0, 1]
+		}
+
+
+	]
+}
