@@ -7,15 +7,19 @@
 		{"id": "box1", "model": "assets/models/box1.mgcg", "format": "MGCG"},
 		{"id": "box2", "model": "assets/models/box2.mgcg", "format": "MGCG"},
 		{"id": "cupboard1", "model": "assets/models/cupboard1.mgcg", "format": "MGCG"},
-		{"id": "decoration1", "model": "assets/models/decoration1.mgcg", "format": "MGCG"},
-		{"id": "axis", "model": "assets/models/axis.obj", "format": "OBJ"}
+                {"id": "decoration1", "model": "assets/models/decoration1.mgcg", "format": "MGCG"},
+                {"id": "potted1", "model": "assets/models/M_PottedPlant_01.mgcg", "format":"MGCG"},
+                {"id": "potted2", "model": "assets/models/M_PottedPlant_02.mgcg", "format":"MGCG"},
+                {"id": "axis", "model": "assets/models/axis.obj", "format": "OBJ"}
 
 		],
 	"textures": [
 		{"id": "t0", "texture": "assets/textures/Textures_Dungeon.png"},
 		{"id": "floor", "texture": "assets/textures/floor.png"},
-		{"id": "walls", "texture": "assets/textures/walls.png"}
-	],
+                {"id": "walls", "texture": "assets/textures/walls.png"},
+                {"id": "plant1", "texture": "assets/textures/M_PottedPlant_01.png"},
+                {"id": "plant2", "texture": "assets/textures/M_PottedPlant_02.png"}
+        ],
 	"instances": [
 		{"id": "ge",   "model": "ge",   "texture": "t0",
 		 "transform": [5, 0, 0, 60,
@@ -76,18 +80,32 @@
 				5, 0, 0, -30,
 				0, 0, 0, 1]
 		},
-		{
-			"id": "decoration1",   "model": "decoration1",   "texture": "t0",
-			"transform": [3, 0, 0, 70,
-				0, 3, 0, 2.5,
-				0, 0, 3, 0,
-				0, 0, 0, 1]
-		},
-		{
-			"id": "axis",   "model": "axis",   "texture": "t0",
-			"transform": [5, 0, 0, 215,
-				0, 5, 0, 5,
-				0, 0, 5, -155,
+                {
+                        "id": "decoration1",   "model": "decoration1",   "texture": "t0",
+                        "transform": [3, 0, 0, 70,
+                                0, 3, 0, 2.5,
+                                0, 0, 3, 0,
+                                0, 0, 0, 1]
+                },
+                {
+                        "id": "plant1",   "model": "potted1",   "texture": "plant1",
+                        "transform": [3, 0, 0, 50,
+                                0, 3, 0, 2.5,
+                                0, 0, 3, 10,
+                                0, 0, 0, 1]
+                },
+                {
+                        "id": "plant2",   "model": "potted2",   "texture": "plant2",
+                        "transform": [3, 0, 0, 55,
+                                0, 3, 0, 2.5,
+                                0, 0, 3, -10,
+                                0, 0, 0, 1]
+                },
+                {
+                        "id": "axis",   "model": "axis",   "texture": "t0",
+                        "transform": [5, 0, 0, 215,
+                                0, 5, 0, 5,
+                                0, 0, 5, -155,
 				0, 0, 0, 1]
 		}
 
