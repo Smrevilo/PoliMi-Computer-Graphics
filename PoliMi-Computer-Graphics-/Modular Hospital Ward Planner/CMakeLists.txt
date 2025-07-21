@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(A02 C CXX)
+project(Modular_Hospital_Ward_Planner C CXX)
 
 # Enable C and C++ languages
 enable_language(C)
@@ -31,15 +31,15 @@ if(APPLE)
     file(GLOB_RECURSE HEADERS include/*.h include/*.hpp)
 
     # Define the project executable
-    add_executable(A02 ${SOURCES} ${HEADERS})
+    add_executable(Modular_Hospital_Ward_Planner ${SOURCES} ${HEADERS})
 
     # Include directories
-    target_include_directories(A02 PRIVATE ${GLM_INCLUDE_DIRS})
-    target_include_directories(A02 PRIVATE ${CMAKE_SOURCE_DIR}/include)
-    target_include_directories(A02 PUBLIC ${Vulkan_INCLUDE_DIR})
+    target_include_directories(Modular_Hospital_Ward_Planner PRIVATE ${GLM_INCLUDE_DIRS})
+    target_include_directories(Modular_Hospital_Ward_Planner PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_include_directories(Modular_Hospital_Ward_Planner PUBLIC ${Vulkan_INCLUDE_DIR})
 
     # Link libraries
-    target_link_libraries(A02 PRIVATE Vulkan::Vulkan glfw Threads::Threads)
+    target_link_libraries(Modular_Hospital_Ward_Planner PRIVATE Vulkan::Vulkan glfw Threads::Threads)
 
     # Shader setup for macOS
     file(GLOB SPIRV_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.spv")
@@ -60,7 +60,7 @@ if(APPLE)
     add_custom_target(Shaders DEPENDS ${SPIRV_SOURCE_FILES})
 
     # Ensure that depends on the SPIR-V files
-    add_dependencies(A02 Shaders)
+    add_dependencies(Modular_Hospital_Ward_Planner Shaders)
 
     # Copy resources (textures, models, etc.) to the build directory
     file(COPY ${CMAKE_SOURCE_DIR}/assets/textures DESTINATION ${CMAKE_BINARY_DIR}/assets)
