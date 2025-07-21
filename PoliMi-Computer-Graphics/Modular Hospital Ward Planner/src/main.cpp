@@ -33,10 +33,6 @@ struct Vertex {
 #include "modules/Scene.hpp"
 
 
-class ModularHospitalWardPlanner;
-void SetProjections(ModularHospitalWardPlanner *A);
-
-
 // MAIN !
 class ModularHospitalWardPlanner : public BaseProject {
 	protected:
@@ -261,14 +257,13 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 
-		glm::mat4 M ;
+		glm::mat4 M = glm::perspective(glm::radians(45.0f), Ar, 0.1f, 500.0f);
+		M[1][1] *= -1;
 
-
-		glm::mat4 Mv =  glm::inverse(
-							glm::translate(glm::mat4(1), Pos) *
-							glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) *
-							glm::translate(glm::mat4(1), glm::vec3(0,2,8))
-						);
+		glm::mat4 Mv =  glm::inverse(glm::translate(glm::mat4(1), Pos) *
+										glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) *
+										glm::translate(glm::mat4(1), glm::vec3(0,2,8))
+										);
 
 		glm::mat4 ViewPrj =  M * Mv;
 		UniformBufferObject ubo{};
@@ -298,8 +293,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		DS1.map(currentImage, &gubo, sizeof(gubo), 2);
 	}
 };
-
-#include "cameras.hpp"
 
 // This is the main: probably you do not need to touch this!
 int main() {
