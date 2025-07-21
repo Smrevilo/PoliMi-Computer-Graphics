@@ -1,6 +1,6 @@
 
 
-void SetProjections(A02 *A) {
+void SetProjections(ModularHospitalWardPlanner *A) {
 /**************
  Using A->SetMatrix(i, M) where:
  i -> index of the matrix to set (0 .. 7)

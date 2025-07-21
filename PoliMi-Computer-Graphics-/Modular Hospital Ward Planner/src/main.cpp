@@ -46,12 +46,12 @@ struct Vertex {
 #include "modules/Scene.hpp"
 
 
-class A02;
-void SetProjections(A02 *A);
+class ModularHospitalWardPlanner;
+void SetProjections(ModularHospitalWardPlanner *A);
 
 
 // MAIN !
-class A02 : public BaseProject {
+class ModularHospitalWardPlanner : public BaseProject {
 	private:
 		glm::mat4 PrjM[8];
 
@@ -95,7 +95,7 @@ class A02 : public BaseProject {
 		// window size, titile and initial background
 		windowWidth = 800;
 		windowHeight = 600;
-		windowTitle = "A02 - Projections";
+                windowTitle = "Modular Hospital Ward Planner";
     	windowResizable = GLFW_TRUE;
 		initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
@@ -320,7 +320,7 @@ class A02 : public BaseProject {
 				subpass++;
 				std::cout << "Scene : " << currScene << " subpass: " << subpass << "\n";
 				char buf[20];
-				sprintf(buf, "A02_%d.png", subpass);
+                            sprintf(buf, "Modular_Hospital_Ward_Planner_%d.png", subpass);
 				saveScreenshot(buf, currentImage);
 				if(subpass == 8) {
 					currScene++;
@@ -378,7 +378,7 @@ class A02 : public BaseProject {
 
 // This is the main: probably you do not need to touch this!
 int main() {
-    A02 app;
+    ModularHospitalWardPlanner app;
 
     try {
         app.run();
