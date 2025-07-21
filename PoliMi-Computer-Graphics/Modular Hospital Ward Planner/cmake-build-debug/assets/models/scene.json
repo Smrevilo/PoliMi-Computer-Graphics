@@ -89,16 +89,16 @@
 		},
 		{
 			"id": "potted1",   "model": "potted1",   "texture": "potted1",
-			"transform": [3, 0, 0, 50,
-				0, 3, 0, 2.5,
-				0, 0, 3, 10,
+			"transform": [0.2, 0, 0, 50,
+				0, 0.2, 0, 0,
+				0, 0, 0.2, 10,
 				0, 0, 0, 1]
 		},
 		{
 			"id": "potted2",   "model": "potted2",   "texture": "potted2",
-			"transform": [3, 0, 0, 55,
-				0, 3, 0, 2.5,
-				0, 0, 3, 15,
+			"transform": [0.2, 0, 0, 60,
+				0, 0.2, 0, 0,
+				0, 0, 0.2, 30,
 				0, 0, 0, 1]
 		},
 		{
