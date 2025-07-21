@@ -229,7 +229,14 @@ class ModularHospitalWardPlanner : public BaseProject {
 			if(!debounce) {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
-				RebuildPipeline();
+
+				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) *
+												glm::vec4(0,0,-5.0f,1));
+				glm::vec3 placePos = Pos + forward;
+				glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
+									glm::scale(glm::mat4(1), glm::vec3(0.2f));
+				std::string id = "potted_spawn_" + std::to_string(SC.InstanceCount);
+				SC.addInstance(id, SC.MeshIds["potted1"], SC.TextureIds["potted1"], plantTr, DSL);
 			}
 		} else {
 			if((curDebounce == GLFW_KEY_SPACE) && debounce) {
@@ -237,6 +244,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 				curDebounce = 0;
 			}
 		}
+
 		if(glfwGetKey(window, GLFW_KEY_P)) {
 			if(!debounce) {
 				debounce = true;
