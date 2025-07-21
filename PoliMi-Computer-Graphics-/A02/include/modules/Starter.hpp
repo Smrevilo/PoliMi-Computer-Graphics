@@ -141,7 +141,7 @@ ErrorCodes[ ] = {
 	{ VK_SUBOPTIMAL_KHR, "Suboptimal" },
 	{ VK_ERROR_OUT_OF_DATE_KHR, "Error Out of Date" },
 	{ VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "Incompatible Display" },
-	{ VK_ERROR_VALIDATION_FAILED_EXT, "Valuidation Failed" },
+        { VK_ERROR_VALIDATION_FAILED_EXT, "Validation Failed" },
 	{ VK_ERROR_INVALID_SHADER_NV, "Invalid Shader" },
 	{ VK_ERROR_OUT_OF_POOL_MEMORY_KHR, "Out of Pool Memory" },
 	{ VK_ERROR_INVALID_EXTERNAL_HANDLE, "Invalid External Handle" },
