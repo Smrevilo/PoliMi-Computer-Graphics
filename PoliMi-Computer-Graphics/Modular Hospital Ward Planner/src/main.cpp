@@ -263,12 +263,12 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 
-		glm::mat4 M = glm::perspective(glm::radians(45.0f), Ar, 0.1f, 500.0f);
+		glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
 		M[1][1] *= -1;
 
 		glm::mat4 Mv =  glm::inverse(glm::translate(glm::mat4(1), Pos) *
 										glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) *
-										glm::translate(glm::mat4(1), glm::vec3(0,2,8))
+										glm::translate(glm::mat4(1), glm::vec3(0,5,15))
 										);
 
 		glm::mat4 ViewPrj =  M * Mv;
