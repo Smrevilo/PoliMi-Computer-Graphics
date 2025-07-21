@@ -6,19 +6,6 @@
 #include "modules/TextMaker.hpp"
 
 
-std::vector<SingleText> outText = {
-	{2, {"Ortographic Front", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Isometric", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Dimetic", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Trimetric", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Parallel, cabinet", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Perspective, normal", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Perspective, zoom", "Press SPACE to change projection", "", ""}, 0, 0},
-	{2, {"Perspective, wide", "Press SPACE to save the screenshots", "", ""}, 0, 0},
-	{1, {"Saving Screenshots. Please wait.","","",""}, 0, 0},
-	{2, {"Screenshot Saved!","Press ESC to quit","",""}, 0, 0}
-};
-
 // The uniform buffer object used in this example
 struct UniformBufferObject {
 	alignas(16) glm::mat4 mvpMat;
@@ -52,16 +39,6 @@ void SetProjections(ModularHospitalWardPlanner *A);
 
 // MAIN !
 class ModularHospitalWardPlanner : public BaseProject {
-	private:
-		glm::mat4 PrjM[8];
-
-	public:
-		void SetMatrix(int i, glm::mat4 M) {
-			if((i >= 0) && (i < 8)) {
-				PrjM[i] = M;
-			}
-		}
-
 	protected:
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
@@ -80,10 +57,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 	Scene SC;
 
-	TextMaker txt;
-
 	// Other application parameters
-	int currScene = 0;
 	float Ar;
 	glm::vec3 Pos;
 	glm::vec3 InitialPos;
@@ -152,11 +126,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		// Load Scene
 		SC.init(this, &VD, DSL, P, "assets/models/scene.json");
 
-		// updates the text
-		txt.init(this, &outText);
-
 		// Init local variables
-		SetProjections(this);
 		Pos = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[3]);
 		InitialPos = Pos;
 		//Save initial scale
@@ -176,7 +146,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		// Here you define the data set
 		SC.pipelinesAndDescriptorSetsInit(DSL);
-		txt.pipelinesAndDescriptorSetsInit();
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -187,7 +156,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		DS1.cleanup();
 
 		SC.pipelinesAndDescriptorSetsCleanup();
-		txt.pipelinesAndDescriptorSetsCleanup();
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -205,7 +173,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		M1.cleanup();
 
 		SC.localCleanup();
-		txt.localCleanup();
 	}
 
 	// Here it is the creation of the command buffer:
@@ -227,7 +194,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
 		SC.populateCommandBuffer(commandBuffer, currentImage, P);
-		txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
 	}
 
 	// Here is where you update the uniforms.
@@ -269,16 +235,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 			if(!debounce) {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
-				if(currScene != 8) {
-					currScene = (currScene+1) % outText.size();
-				}
-				if(currScene == 8) {
-					if(subpass >= 8) {
-						currScene = 0;
-					}
-				}
-				std::cout << "Scene : " << currScene << "\n";
-
 				RebuildPipeline();
 			}
 		} else {
@@ -306,32 +262,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 
 		glm::mat4 M ;
-		if(currScene < 8) {
-			M = PrjM[currScene];
-		} else if(currScene == 8) {
-			Pos = InitialPos;
-			SC.I[ghostId].Wm = glm::translate(glm::mat4(1), Pos)*glm::scale(glm::mat4(1), InitialScale);
-			ang = lookAng = DlookAng = 0;
-
-			M = PrjM[subpass];
-			subpassTimer += deltaT;
-			if(subpassTimer > 1.0f) {
-				subpassTimer = 0.0f;
-				subpass++;
-				std::cout << "Scene : " << currScene << " subpass: " << subpass << "\n";
-				char buf[20];
-                            sprintf(buf, "Modular_Hospital_Ward_Planner_%d.png", subpass);
-				saveScreenshot(buf, currentImage);
-				if(subpass == 8) {
-					currScene++;
-					std::cout << "Scene : " << currScene << "\n";
-					RebuildPipeline();
-				}
-			}
-		} else {
-			M = glm::perspective(glm::radians(45.0f), Ar, 0.1f, 500.0f);
-			M[1][1] *= -1;
-		}
 
 
 		glm::mat4 Mv =  glm::inverse(
@@ -351,11 +281,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
 		gubo.eyeDir = glm::vec4(0);
-		if(((currScene > 4) && (currScene < 8)) || ((currScene == 8) && (subpass > 4))){
-			gubo.eyeDir.w = 0.0;
-		} else {
-			gubo.eyeDir.w = 1.0;
-		}
 
 		for(int i = 0; i < SC.InstanceCount; i++) {
 			ubo.mMat = SC.I[i].Wm * baseTr;
