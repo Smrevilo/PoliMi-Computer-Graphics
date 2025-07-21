@@ -218,7 +218,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		lookAng -= r.y * ROT_SPEED * deltaT;
 		lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
-		DlookAng = 3.1416/2 * round(2*lookAng/3.1416);
+		DlookAng = lookAng;
 //std::cout << DlookAng;
 
 		ang = DlookAng;
@@ -266,7 +266,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		glm::mat4 ViewPrj =  M * Mv;
 		UniformBufferObject ubo{};
 		glm::mat4 baseTr = glm::mat4(1.0f);
-		// Here is where you actually update your uniforms
 
 		// updates global uniforms
 		GlobalUniformBufferObject gubo{};
