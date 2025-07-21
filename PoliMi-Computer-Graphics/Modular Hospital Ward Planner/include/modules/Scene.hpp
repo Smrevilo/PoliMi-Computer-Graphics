@@ -101,11 +101,34 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 		for(int i = 0; i < InstanceCount; i++) {
 			DS[i] = new DescriptorSet();
 			DS[i]->init(BP, &DSL, {
-					{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
-					{1, TEXTURE, 0, T[I[i].Tid]},
-					{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
-				});
+							{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+							{1, TEXTURE, 0, T[I[i].Tid]},
+							{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+					});
 		}
+	}
+
+	int addInstance(const std::string &id, int meshIdx, int texIdx,
+					const glm::mat4 &transform, DescriptorSetLayout &DSL) {
+		int idx = InstanceCount;
+		InstanceCount++;
+		I = (Instance *)realloc(I, InstanceCount * sizeof(Instance));
+		DS = (DescriptorSet **)realloc(DS, InstanceCount * sizeof(DescriptorSet *));
+
+		I[idx].id = new std::string(id);
+		I[idx].Mid = meshIdx;
+		I[idx].Tid = texIdx;
+		I[idx].Wm = transform;
+
+		DS[idx] = new DescriptorSet();
+		DS[idx]->init(BP, &DSL, {
+								{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+								{1, TEXTURE, 0, T[texIdx]},
+								{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+						});
+
+		InstanceIds[id] = idx;
+		return idx;
 	}
 	
 	void pipelinesAndDescriptorSetsCleanup() {
