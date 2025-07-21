@@ -206,7 +206,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		const float ROT_SPEED = glm::radians(360.0f);
 		const float MOVE_SPEED = 10.0f;
 		int ghostId = SC.InstanceIds["ge"];
-		static float ang;
+		static float ang = 0.0f;
 		static float lookAng = 0;
 		static float DlookAng = 0;
 		static int subpass = 0;
@@ -221,9 +221,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		DlookAng = 3.1416/2 * round(2*lookAng/3.1416);
 //std::cout << DlookAng;
 
-		if((m.x != 0) || (m.z != 0)) {
-			ang	= atan2(-m.z, m.x) + 3.1416/2.0;
-		}
+		ang = DlookAng;
 		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1), ang, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
 
 
