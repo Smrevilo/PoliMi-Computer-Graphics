@@ -1,0 +1,4 @@
+/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/A02.dir
+/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/Shaders.dir
+/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/rebuild_cache.dir
