@@ -70,7 +70,7 @@ class Scene {
 				TextureIds[ts[k]["id"]] = k;
 				T[k] = new Texture();
 
-				T[k]->init(BP, ts[k]["texture"]);
+				T[k]->init(BP, ts[k]["texture"].template get<std::string>());
 			}
 
 			// INSTANCES TextureCount
