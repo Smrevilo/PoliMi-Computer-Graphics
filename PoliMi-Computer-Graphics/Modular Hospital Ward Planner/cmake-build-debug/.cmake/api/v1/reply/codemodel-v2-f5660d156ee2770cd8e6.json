@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Modular_Hospital_Ward_Planner",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Modular_Hospital_Ward_Planner::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Modular_Hospital_Ward_Planner-Debug-001479b7bf4d0e677333.json",
+					"name" : "Modular_Hospital_Ward_Planner",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Shaders::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Shaders-Debug-4241344c895ea8d7c276.json",
+					"name" : "Shaders",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug",
+		"source" : "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

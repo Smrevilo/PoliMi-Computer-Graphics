@@ -8,13 +8,17 @@
 		{"id": "box2", "model": "assets/models/box2.mgcg", "format": "MGCG"},
 		{"id": "cupboard1", "model": "assets/models/cupboard1.mgcg", "format": "MGCG"},
 		{"id": "decoration1", "model": "assets/models/decoration1.mgcg", "format": "MGCG"},
+		{"id": "potted1", "model": "assets/models/M_PottedPlant_01.mgcg", "format":"MGCG"},
+		{"id": "potted2", "model": "assets/models/M_PottedPlant_02.mgcg", "format":"MGCG"},
 		{"id": "axis", "model": "assets/models/axis.obj", "format": "OBJ"}
 
 		],
 	"textures": [
 		{"id": "t0", "texture": "assets/textures/Textures_Dungeon.png"},
 		{"id": "floor", "texture": "assets/textures/floor.png"},
-		{"id": "walls", "texture": "assets/textures/walls.png"}
+		{"id": "walls", "texture": "assets/textures/walls.png"},
+		{"id": "potted1", "texture": "assets/textures/M_PottedPlant_01.png"},
+		{"id": "potted2", "texture": "assets/textures/M_PottedPlant_02.png"}
 	],
 	"instances": [
 		{"id": "ge",   "model": "ge",   "texture": "t0",
@@ -81,6 +85,20 @@
 			"transform": [3, 0, 0, 70,
 				0, 3, 0, 2.5,
 				0, 0, 3, 0,
+				0, 0, 0, 1]
+		},
+		{
+			"id": "potted1",   "model": "potted1",   "texture": "potted1",
+			"transform": [3, 0, 0, 50,
+				0, 3, 0, 2.5,
+				0, 0, 3, 10,
+				0, 0, 0, 1]
+		},
+		{
+			"id": "potted2",   "model": "potted2",   "texture": "potted2",
+			"transform": [3, 0, 0, 55,
+				0, 3, 0, 2.5,
+				0, 0, 3, 15,
 				0, 0, 0, 1]
 		},
 		{

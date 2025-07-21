@@ -1,4 +1,4 @@
-/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/A02.dir
-/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/Shaders.dir
-/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/oliverstege/Desktop/Polimi/Computer Graphics/A02/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/CMakeFiles/Modular_Hospital_Ward_Planner.dir
+/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/CMakeFiles/Shaders.dir
+/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/CMakeFiles/rebuild_cache.dir
