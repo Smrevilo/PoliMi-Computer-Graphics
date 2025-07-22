@@ -237,6 +237,14 @@ class ModularHospitalWardPlanner : public BaseProject {
 									glm::scale(glm::mat4(1), glm::vec3(0.2f));
 				std::string id = "potted_spawn_" + std::to_string(SC.InstanceCount);
 				SC.addInstance(id, SC.MeshIds["potted1"], SC.TextureIds["potted1"], plantTr, DSL);
+
+				// Re-record command buffers so the new instance
+				// is included in the rendering pipeline
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool,
+									static_cast<uint32_t>(commandBuffers.size()),
+									commandBuffers.data());
+				createCommandBuffers();
 			}
 		} else {
 			if((curDebounce == GLFW_KEY_SPACE) && debounce) {
