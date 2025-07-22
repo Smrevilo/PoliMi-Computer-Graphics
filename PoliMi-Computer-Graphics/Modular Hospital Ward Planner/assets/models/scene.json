@@ -17,8 +17,8 @@
 		{"id": "t0", "texture": "assets/textures/Textures_Dungeon.png"},
 		{"id": "floor", "texture": "assets/textures/floor.png"},
 		{"id": "walls", "texture": "assets/textures/walls.png"},
-		{"id": "potted1", "texture": "assets/textures/M_PottedPlant_01.png"},
-		{"id": "potted2", "texture": "assets/textures/M_PottedPlant_02.png"}
+		{"id": "potted1", "texture": "assets/textures/T_PottedPlant_01.png"},
+		{"id": "potted2", "texture": "assets/textures/T_PottedPlant_02.png"}
 	],
 	"instances": [
 		{"id": "ge",   "model": "ge",   "texture": "t0",
