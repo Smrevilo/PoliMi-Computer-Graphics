@@ -70,7 +70,7 @@ class Scene {
 				TextureIds[ts[k]["id"]] = k;
 				T[k] = new Texture();
 
-				T[k]->init(BP, ts[k]["texture"]);
+				T[k]->init(BP, ts[k]["texture"].template get<std::string>());
 			}
 
 			// INSTANCES TextureCount
@@ -101,11 +101,57 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 		for(int i = 0; i < InstanceCount; i++) {
 			DS[i] = new DescriptorSet();
 			DS[i]->init(BP, &DSL, {
-					{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
-					{1, TEXTURE, 0, T[I[i].Tid]},
-					{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
-				});
+							{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+							{1, TEXTURE, 0, T[I[i].Tid]},
+							{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+					});
 		}
+	}
+
+	int addInstance(const std::string &id, int meshIdx, int texIdx,
+					const glm::mat4 &transform, DescriptorSetLayout &DSL) {
+		int idx = InstanceCount;
+		InstanceCount++;
+		I = (Instance *)realloc(I, InstanceCount * sizeof(Instance));
+		DS = (DescriptorSet **)realloc(DS, InstanceCount * sizeof(DescriptorSet *));
+
+		I[idx].id = new std::string(id);
+		I[idx].Mid = meshIdx;
+		I[idx].Tid = texIdx;
+		I[idx].Wm = transform;
+
+		DS[idx] = new DescriptorSet();
+		DS[idx]->init(BP, &DSL, {
+								{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+								{1, TEXTURE, 0, T[texIdx]},
+								{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+						});
+
+		InstanceIds[id] = idx;
+		return idx;
+	}
+
+	void removeInstance(const std::string &id) {
+		auto it = InstanceIds.find(id);
+		if(it == InstanceIds.end()) return;
+		int idx = it->second;
+		int last = InstanceCount - 1;
+
+		DescriptorSet* toDelete = DS[idx];
+		toDelete->cleanup();
+		delete toDelete;
+		delete I[idx].id;
+
+		if(idx != last) {
+			DS[idx] = DS[last];
+			I[idx] = I[last];
+			InstanceIds[*I[idx].id] = idx;
+		}
+
+		InstanceIds.erase(it);
+		InstanceCount--;
+		DS = (DescriptorSet **)realloc(DS, InstanceCount * sizeof(DescriptorSet *));
+		I  = (Instance *)realloc(I, InstanceCount * sizeof(Instance));
 	}
 	
 	void pipelinesAndDescriptorSetsCleanup() {

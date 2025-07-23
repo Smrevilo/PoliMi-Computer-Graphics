@@ -4,7 +4,10 @@
 #define JSON_DIAGNOSTICS 1
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
-
+#include "modules/IconMaker.hpp"
+#include <cmath>
+#include <glm/gtc/constants.hpp>
+#include <unordered_map>
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -32,6 +35,12 @@ struct Vertex {
 
 #include "modules/Scene.hpp"
 
+struct GridCoordHash {
+	size_t operator()(const std::pair<int,int>& p) const noexcept {
+		return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
+	}
+};
+
 
 // MAIN !
 class ModularHospitalWardPlanner : public BaseProject {
@@ -52,6 +61,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	DescriptorSet DS1;
 
 	Scene SC;
+	IconMaker IR;
 
 	// Other application parameters
 	float Ar;
@@ -59,6 +69,11 @@ class ModularHospitalWardPlanner : public BaseProject {
 	glm::vec3 InitialPos;
 	glm::vec3 InitialScale;
 
+	std::unordered_map<std::pair<int,int>, std::string, GridCoordHash> placedObjects;
+	int spawnCounter = 0;
+	std::vector<std::string> plantIds;
+	int selectedPlant = 0;
+	std::unordered_map<std::string, float> objectScale;
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -70,9 +85,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 		initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 		// Descriptor pool sizes
-		uniformBlocksInPool = 15 * 2 + 2;
-		texturesInPool = 15 + 1 + 1;
-		setsInPool = 15 + 1 + 1;
+		// allow for many dynamically spawned objects
+		uniformBlocksInPool = 64 * 2 + 2;
+		texturesInPool = 64 + 1 + 1;
+		setsInPool = 64 + 1 + 1;
 
 		Ar = 4.0f / 3.0f;
 	}
@@ -127,6 +143,43 @@ class ModularHospitalWardPlanner : public BaseProject {
 		InitialPos = Pos;
 		//Save initial scale
 		InitialScale = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[0][0]);
+
+		plantIds = {"potted1", "potted2",
+                             "aircondition", "bed", "bulletinboard", "cabinet",
+                             "closestool", "curtain", "door1", "door2", "door3",
+                             "nursesstation", "pc", "poster", "shelf", "socket",
+                             "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
+
+		objectScale = {{"potted1",0.2f},{"potted2",0.2f},{"aircondition",0.2f},
+			{"bed",0.2f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
+			{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
+			{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
+			{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+
+		IR.init(this,
+                     {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
+                      {"potted2", "assets/Icons/M_PottedPlant_02.png"},
+                      {"aircondition", "assets/Icons/M_Aircondition_01.png"},
+                      {"bed", "assets/Icons/M_Bed_01.png"},
+                      {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
+                      {"cabinet", "assets/Icons/M_Cabinet_01.png"},
+                      {"closestool", "assets/Icons/M_Closestool_01.png"},
+                      {"curtain", "assets/Icons/M_Curtain_01.png"},
+                      {"door1", "assets/Icons/M_Door_01.png"},
+                      {"door2", "assets/Icons/M_Door_02.png"},
+                      {"door3", "assets/Icons/M_Door_03.png"},
+                      {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
+                      {"pc", "assets/Icons/M_PC_01.png"},
+                      {"poster", "assets/Icons/M_Poster_01.png"},
+                      {"shelf", "assets/Icons/M_Shelf_01.png"},
+                      {"socket", "assets/Icons/M_Socket_01.png"},
+                      {"sofa", "assets/Icons/M_Sofa_01.png"},
+                      {"tv", "assets/Icons/M_TV_01.png"},
+                      {"top", "assets/Icons/M_Top_01.png"},
+                      {"trashcan", "assets/Icons/M_TrashCan_01.png"},
+                      {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
+                      {"window", "assets/Icons/M_Window_01.png"}},
+                     windowWidth, windowHeight);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -135,13 +188,14 @@ class ModularHospitalWardPlanner : public BaseProject {
 		P.create();
 
 		DS1.init(this, &DSL, {
-					{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
-					{1, TEXTURE, 0, SC.T[SC.TextureIds["t0"]]},
-					{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+						{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+						{1, TEXTURE, 0, SC.T[SC.TextureIds["t0"]]},
+						{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
 				});
 
 		// Here you define the data set
 		SC.pipelinesAndDescriptorSetsInit(DSL);
+		IR.pipelinesAndDescriptorSetsInit();
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -152,6 +206,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		DS1.cleanup();
 
 		SC.pipelinesAndDescriptorSetsCleanup();
+		IR.pipelinesAndDescriptorSetsCleanup();
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -169,6 +224,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		M1.cleanup();
 
 		SC.localCleanup();
+		IR.localCleanup();
 	}
 
 	// Here it is the creation of the command buffer:
@@ -190,6 +246,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
 		SC.populateCommandBuffer(commandBuffer, currentImage, P);
+		IR.populateCommandBuffer(commandBuffer, currentImage, plantIds[selectedPlant]);
 	}
 
 	// Here is where you update the uniforms.
@@ -229,7 +286,44 @@ class ModularHospitalWardPlanner : public BaseProject {
 			if(!debounce) {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
-				RebuildPipeline();
+
+				constexpr float GRID_SIZE = 5.0f;
+				float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+
+				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+												  glm::vec4(0,0,-1.0f,0));
+				glm::vec3 placePos = Pos + forward * GRID_SIZE;
+				int gx = static_cast<int>(std::round(placePos.x / GRID_SIZE));
+				int gz = static_cast<int>(std::round(placePos.z / GRID_SIZE));
+				placePos.x = GRID_SIZE * gx;
+				placePos.z = GRID_SIZE * gz;
+				placePos.y = 0.0f;
+				std::pair<int,int> gkey = {gx, gz};
+
+				auto pit = placedObjects.find(gkey);
+				if(pit != placedObjects.end()) {
+					SC.removeInstance(pit->second);
+					placedObjects.erase(pit);
+				} else {
+					std::string pId = plantIds[selectedPlant];
+					float scale = 0.2f;
+					auto sit = objectScale.find(pId);
+					if(sit != objectScale.end()) scale = sit->second;
+
+					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
+										   glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+										   glm::scale(glm::mat4(1), glm::vec3(scale));
+					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
+					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], plantTr, DSL);
+					placedObjects[gkey] = id;
+				}
+				// Re-record command buffers so the new instance
+				// is included in the rendering pipeline
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool,
+									static_cast<uint32_t>(commandBuffers.size()),
+									commandBuffers.data());
+				createCommandBuffers();
 			}
 		} else {
 			if((curDebounce == GLFW_KEY_SPACE) && debounce) {
@@ -237,6 +331,45 @@ class ModularHospitalWardPlanner : public BaseProject {
 				curDebounce = 0;
 			}
 		}
+
+		if(glfwGetKey(window, GLFW_KEY_Q)) {
+			if(!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_Q;
+				selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
+				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+                                                       commandBuffers.data());
+				createCommandBuffers();
+			}
+		} else {
+			if((curDebounce == GLFW_KEY_Q) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
+		if(glfwGetKey(window, GLFW_KEY_E)) {
+			if(!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_E;
+				selectedPlant = (selectedPlant + 1) % plantIds.size();
+				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+                                                       commandBuffers.data());
+				createCommandBuffers();
+			}
+		} else {
+			if((curDebounce == GLFW_KEY_E) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
 		if(glfwGetKey(window, GLFW_KEY_P)) {
 			if(!debounce) {
 				debounce = true;
@@ -255,13 +388,12 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 
-		glm::mat4 M = glm::perspective(glm::radians(45.0f), Ar, 0.1f, 500.0f);
+		glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
 		M[1][1] *= -1;
 
-		glm::mat4 Mv =  glm::inverse(glm::translate(glm::mat4(1), Pos) *
-										glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) *
-										glm::translate(glm::mat4(1), glm::vec3(0,2,8))
-										);
+		glm::vec3 cameraOffset = glm::vec3(-15.0f, 15.0f, 15.0f);
+		glm::vec3 cameraPos = Pos + cameraOffset;
+		glm::mat4 Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
 
 		glm::mat4 ViewPrj =  M * Mv;
 		UniformBufferObject ubo{};
