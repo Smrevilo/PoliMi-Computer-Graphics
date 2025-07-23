@@ -142,11 +142,35 @@ class ModularHospitalWardPlanner : public BaseProject {
 		InitialPos = Pos;
 		//Save initial scale
 		InitialScale = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[0][0]);
-		plantIds = {"potted1", "potted2"};
-		IR.init(this,
-						{{"potted1", "assets/Icons/M_PottedPlant_01.png"},
-						 {"potted2", "assets/Icons/M_PottedPlant_02.png"}},
-						windowWidth, windowHeight);
+		                plantIds = {"potted1", "potted2",
+                             "aircondition", "bed", "bulletinboard", "cabinet",
+                             "closestool", "curtain", "door1", "door2", "door3",
+                             "nursesstation", "pc", "poster", "shelf", "socket",
+                             "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
+                IR.init(this,
+                                                {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
+                                                 {"potted2", "assets/Icons/M_PottedPlant_02.png"},
+                                                 {"aircondition", "assets/Icons/M_Aircondition_01.png"},
+                                                 {"bed", "assets/Icons/M_Bed_01.png"},
+                                                 {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
+                                                 {"cabinet", "assets/Icons/M_Cabinet_01.png"},
+                                                 {"closestool", "assets/Icons/M_Closestool_01.png"},
+                                                 {"curtain", "assets/Icons/M_Curtain_01.png"},
+                                                 {"door1", "assets/Icons/M_Door_01.png"},
+                                                 {"door2", "assets/Icons/M_Door_02.png"},
+                                                 {"door3", "assets/Icons/M_Door_03.png"},
+                                                 {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
+                                                 {"pc", "assets/Icons/M_PC_01.png"},
+                                                 {"poster", "assets/Icons/M_Poster_01.png"},
+                                                 {"shelf", "assets/Icons/M_Shelf_01.png"},
+                                                 {"socket", "assets/Icons/M_Socket_01.png"},
+                                                 {"sofa", "assets/Icons/M_Sofa_01.png"},
+                                                 {"tv", "assets/Icons/M_TV_01.png"},
+                                                 {"top", "assets/Icons/M_Top_01.png"},
+                                                 {"trashcan", "assets/Icons/M_TrashCan_01.png"},
+                                                 {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
+                                                 {"window", "assets/Icons/M_Window_01.png"}},
+                                                windowWidth, windowHeight);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
