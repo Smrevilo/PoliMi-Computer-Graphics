@@ -301,6 +301,11 @@ class ModularHospitalWardPlanner : public BaseProject {
 				curDebounce = GLFW_KEY_Q;
 				selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
 				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+                                                       commandBuffers.data());
+				createCommandBuffers();
 			}
 		} else {
 			if((curDebounce == GLFW_KEY_Q) && debounce) {
@@ -315,6 +320,11 @@ class ModularHospitalWardPlanner : public BaseProject {
 				curDebounce = GLFW_KEY_E;
 				selectedPlant = (selectedPlant + 1) % plantIds.size();
 				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+                                                       commandBuffers.data());
+				createCommandBuffers();
 			}
 		} else {
 			if((curDebounce == GLFW_KEY_E) && debounce) {
