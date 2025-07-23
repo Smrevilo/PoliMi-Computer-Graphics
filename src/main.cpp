@@ -69,7 +69,8 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 	std::unordered_map<std::pair<int,int>, std::string, GridCoordHash> placedObjects;
 	int spawnCounter = 0;
-
+	std::vector<std::string> plantIds;
+	int selectedPlant = 0;
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -139,6 +140,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		InitialPos = Pos;
 		//Save initial scale
 		InitialScale = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[0][0]);
+		plantIds = {"potted1", "potted2"};
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -264,7 +266,8 @@ class ModularHospitalWardPlanner : public BaseProject {
 													glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
 													glm::scale(glm::mat4(1), glm::vec3(0.2f));
 					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
-					SC.addInstance(id, SC.MeshIds["potted1"], SC.TextureIds["potted1"], plantTr, DSL);
+					std::string pId = plantIds[selectedPlant];
+					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], plantTr, DSL);
 					placedObjects[gkey] = id;
 				}
 				// Re-record command buffers so the new instance
@@ -277,6 +280,34 @@ class ModularHospitalWardPlanner : public BaseProject {
 			}
 		} else {
 			if((curDebounce == GLFW_KEY_SPACE) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
+		if(glfwGetKey(window, GLFW_KEY_Q)) {
+			if(!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_Q;
+				selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
+				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+			}
+		} else {
+			if((curDebounce == GLFW_KEY_Q) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
+		if(glfwGetKey(window, GLFW_KEY_E)) {
+			if(!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_E;
+				selectedPlant = (selectedPlant + 1) % plantIds.size();
+				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+			}
+		} else {
+			if((curDebounce == GLFW_KEY_E) && debounce) {
 				debounce = false;
 				curDebounce = 0;
 			}
