@@ -4,7 +4,8 @@
 #define JSON_DIAGNOSTICS 1
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
-
+#include <cmath>
+#include <glm/gtc/constants.hpp>
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -231,10 +232,18 @@ class ModularHospitalWardPlanner : public BaseProject {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
 
-				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) *
-												glm::vec4(0,0,-5.0f,1));
-				glm::vec3 placePos = Pos + forward;
+				constexpr float GRID_SIZE = 5.0f;
+				float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+
+				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+															   glm::vec4(0,0,-1.0f,0));
+				glm::vec3 placePos = Pos + forward * GRID_SIZE;
+				placePos.x = GRID_SIZE * std::round(placePos.x / GRID_SIZE);
+				placePos.z = GRID_SIZE * std::round(placePos.z / GRID_SIZE);
+				placePos.y = 0.0f;
+
 				glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
+									glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
 									glm::scale(glm::mat4(1), glm::vec3(0.2f));
 				std::string id = "potted_spawn_" + std::to_string(SC.InstanceCount);
 				SC.addInstance(id, SC.MeshIds["potted1"], SC.TextureIds["potted1"], plantTr, DSL);
