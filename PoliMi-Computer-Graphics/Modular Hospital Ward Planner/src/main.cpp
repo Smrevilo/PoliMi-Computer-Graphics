@@ -141,8 +141,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		// Init local variables
 		Pos = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[3]);
 		InitialPos = Pos;
-		//Save initial scale
-		InitialScale = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[0][0]);
 
 		plantIds = {"potted1", "potted2",
                              "aircondition", "bed", "bulletinboard", "cabinet",
@@ -151,10 +149,14 @@ class ModularHospitalWardPlanner : public BaseProject {
                              "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
 
 		objectScale = {{"potted1",0.2f},{"potted2",0.2f},{"aircondition",0.2f},
-			{"bed",0.2f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
-			{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
-			{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
-			{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+		{"bed",0.2f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
+		{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
+		{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
+		{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+
+		InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
+		SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
+						   SC.TextureIds[plantIds[selectedPlant]], DSL);
 
 		IR.init(this,
                      {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
@@ -365,6 +367,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 				selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
 				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
 
+				InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
+				SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
+								   SC.TextureIds[plantIds[selectedPlant]], DSL);
+
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
                                                        commandBuffers.data());
@@ -383,6 +389,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 				curDebounce = GLFW_KEY_E;
 				selectedPlant = (selectedPlant + 1) % plantIds.size();
 				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+
+				InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
+				SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
+								   SC.TextureIds[plantIds[selectedPlant]], DSL);
 
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
