@@ -130,6 +130,29 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 		InstanceIds[id] = idx;
 		return idx;
 	}
+
+	void removeInstance(const std::string &id) {
+		auto it = InstanceIds.find(id);
+		if(it == InstanceIds.end()) return;
+		int idx = it->second;
+		int last = InstanceCount - 1;
+
+		DescriptorSet* toDelete = DS[idx];
+		toDelete->cleanup();
+		delete toDelete;
+		delete I[idx].id;
+
+		if(idx != last) {
+			DS[idx] = DS[last];
+			I[idx] = I[last];
+			InstanceIds[*I[idx].id] = idx;
+		}
+
+		InstanceIds.erase(it);
+		InstanceCount--;
+		DS = (DescriptorSet **)realloc(DS, InstanceCount * sizeof(DescriptorSet *));
+		I  = (Instance *)realloc(I, InstanceCount * sizeof(Instance));
+	}
 	
 	void pipelinesAndDescriptorSetsCleanup() {
 		// Cleanup datasets
