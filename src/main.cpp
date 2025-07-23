@@ -61,6 +61,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	DescriptorSet DS1;
 
 	Scene SC;
+	IconMaker IR;
 
 	// Other application parameters
 	float Ar;
@@ -142,6 +143,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 		//Save initial scale
 		InitialScale = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[0][0]);
 		plantIds = {"potted1", "potted2"};
+		IR.init(this,
+						{{"potted1", "assets/Icons/M_PottedPlant_01.png"},
+						 {"potted2", "assets/Icons/M_PottedPlant_02.png"}},
+						windowWidth, windowHeight);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -150,13 +155,14 @@ class ModularHospitalWardPlanner : public BaseProject {
 		P.create();
 
 		DS1.init(this, &DSL, {
-					{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
-					{1, TEXTURE, 0, SC.T[SC.TextureIds["t0"]]},
-					{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+						{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+						{1, TEXTURE, 0, SC.T[SC.TextureIds["t0"]]},
+						{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
 				});
 
 		// Here you define the data set
 		SC.pipelinesAndDescriptorSetsInit(DSL);
+		IR.pipelinesAndDescriptorSetsInit();
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -167,6 +173,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		DS1.cleanup();
 
 		SC.pipelinesAndDescriptorSetsCleanup();
+		IR.pipelinesAndDescriptorSetsCleanup();
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -184,6 +191,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		M1.cleanup();
 
 		SC.localCleanup();
+		IR.localCleanup();
 	}
 
 	// Here it is the creation of the command buffer:
@@ -205,6 +213,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
 		SC.populateCommandBuffer(commandBuffer, currentImage, P);
+		IR.populateCommandBuffer(commandBuffer, currentImage, plantIds[selectedPlant]);
 	}
 
 	// Here is where you update the uniforms.
