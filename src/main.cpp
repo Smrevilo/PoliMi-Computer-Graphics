@@ -70,9 +70,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 		initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 		// Descriptor pool sizes
-		uniformBlocksInPool = 15 * 2 + 2;
-		texturesInPool = 15 + 1 + 1;
-		setsInPool = 15 + 1 + 1;
+		// allow for many dynamically spawned objects
+		uniformBlocksInPool = 64 * 2 + 2;
+		texturesInPool = 64 + 1 + 1;
+		setsInPool = 64 + 1 + 1;
 
 		Ar = 4.0f / 3.0f;
 	}
