@@ -1,4 +1,6 @@
 // This has been adapted from the Vulkan tutorial
+#ifndef STARTER_HPP
+#define STARTER_HPP
 
 #include <iostream>
 #include <stdexcept>
@@ -3342,3 +3344,5 @@ void DescriptorSet::map(int currentImage, void *src, int size, int slot) {
 	memcpy(data, src, size);
 	vkUnmapMemory(BP->device, uniformBuffersMemory[slot][currentImage]);	
 }
+
+#endif
