@@ -6,6 +6,7 @@
 #include "modules/TextMaker.hpp"
 #include <cmath>
 #include <glm/gtc/constants.hpp>
+#include <unordered_map>
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -33,6 +34,12 @@ struct Vertex {
 
 #include "modules/Scene.hpp"
 
+struct GridCoordHash {
+	size_t operator()(const std::pair<int,int>& p) const noexcept {
+		return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
+	}
+};
+
 
 // MAIN !
 class ModularHospitalWardPlanner : public BaseProject {
@@ -59,6 +66,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 	glm::vec3 Pos;
 	glm::vec3 InitialPos;
 	glm::vec3 InitialScale;
+
+	std::unordered_map<std::pair<int,int>, std::string, GridCoordHash> placedObjects;
+	int spawnCounter = 0;
 
 
 	// Here you set the main application parameters
@@ -236,18 +246,27 @@ class ModularHospitalWardPlanner : public BaseProject {
 				float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
 
 				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
-															   glm::vec4(0,0,-1.0f,0));
+												  glm::vec4(0,0,-1.0f,0));
 				glm::vec3 placePos = Pos + forward * GRID_SIZE;
-				placePos.x = GRID_SIZE * std::round(placePos.x / GRID_SIZE);
-				placePos.z = GRID_SIZE * std::round(placePos.z / GRID_SIZE);
+				int gx = static_cast<int>(std::round(placePos.x / GRID_SIZE));
+				int gz = static_cast<int>(std::round(placePos.z / GRID_SIZE));
+				placePos.x = GRID_SIZE * gx;
+				placePos.z = GRID_SIZE * gz;
 				placePos.y = 0.0f;
+				std::pair<int,int> gkey = {gx, gz};
 
-				glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
-									glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
-									glm::scale(glm::mat4(1), glm::vec3(0.2f));
-				std::string id = "potted_spawn_" + std::to_string(SC.InstanceCount);
-				SC.addInstance(id, SC.MeshIds["potted1"], SC.TextureIds["potted1"], plantTr, DSL);
-
+				auto pit = placedObjects.find(gkey);
+				if(pit != placedObjects.end()) {
+					SC.removeInstance(pit->second);
+					placedObjects.erase(pit);
+				} else {
+					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
+													glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+													glm::scale(glm::mat4(1), glm::vec3(0.2f));
+					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
+					SC.addInstance(id, SC.MeshIds["potted1"], SC.TextureIds["potted1"], plantTr, DSL);
+					placedObjects[gkey] = id;
+				}
 				// Re-record command buffers so the new instance
 				// is included in the rendering pipeline
 				vkDeviceWaitIdle(device);

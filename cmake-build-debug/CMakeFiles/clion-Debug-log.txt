@@ -7,6 +7,6 @@
 -- Copying SPIR-V file: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/ShaderVert.spv
 -- Copying SPIR-V file: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/TextFrag.spv
 -- Copying SPIR-V file: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/TextVert.spv
--- Configuring done (0.3s)
+-- Configuring done (0.4s)
 -- Generating done (0.1s)
 -- Build files have been written to: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug
