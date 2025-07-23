@@ -4,6 +4,7 @@
 #define JSON_DIAGNOSTICS 1
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
+#include "modules/IconMaker.hpp"
 #include <cmath>
 #include <glm/gtc/constants.hpp>
 #include <unordered_map>
