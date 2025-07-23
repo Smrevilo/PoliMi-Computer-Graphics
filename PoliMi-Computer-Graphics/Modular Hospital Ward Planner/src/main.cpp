@@ -155,8 +155,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
 
 		InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
-		SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
-						   SC.TextureIds[plantIds[selectedPlant]], DSL);
 
 		IR.init(this,
                      {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
@@ -198,6 +196,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 		// Here you define the data set
 		SC.pipelinesAndDescriptorSetsInit(DSL);
 		IR.pipelinesAndDescriptorSetsInit();
+
+		// Update the preview instance now that descriptor sets are ready
+		SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]], SC.TextureIds[plantIds[selectedPlant]], DSL);
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
