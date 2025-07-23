@@ -3312,6 +3312,13 @@ void DescriptorSet::cleanup() {
 			}
 		}
 	}
+	if(!descriptorSets.empty()) {
+		vkFreeDescriptorSets(BP->device,
+										BP->descriptorPool,
+										static_cast<uint32_t>(descriptorSets.size()),
+										descriptorSets.data());
+		descriptorSets.clear();
+	}
 }
 
 void DescriptorSet::bind(VkCommandBuffer commandBuffer, Pipeline &P, int setId,
