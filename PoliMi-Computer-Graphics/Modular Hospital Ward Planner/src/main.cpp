@@ -73,6 +73,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	int spawnCounter = 0;
 	std::vector<std::string> plantIds;
 	int selectedPlant = 0;
+	std::unordered_map<std::string, float> objectScale;
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -142,35 +143,43 @@ class ModularHospitalWardPlanner : public BaseProject {
 		InitialPos = Pos;
 		//Save initial scale
 		InitialScale = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[0][0]);
-		                plantIds = {"potted1", "potted2",
+
+		plantIds = {"potted1", "potted2",
                              "aircondition", "bed", "bulletinboard", "cabinet",
                              "closestool", "curtain", "door1", "door2", "door3",
                              "nursesstation", "pc", "poster", "shelf", "socket",
                              "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
-                IR.init(this,
-                                                {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
-                                                 {"potted2", "assets/Icons/M_PottedPlant_02.png"},
-                                                 {"aircondition", "assets/Icons/M_Aircondition_01.png"},
-                                                 {"bed", "assets/Icons/M_Bed_01.png"},
-                                                 {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
-                                                 {"cabinet", "assets/Icons/M_Cabinet_01.png"},
-                                                 {"closestool", "assets/Icons/M_Closestool_01.png"},
-                                                 {"curtain", "assets/Icons/M_Curtain_01.png"},
-                                                 {"door1", "assets/Icons/M_Door_01.png"},
-                                                 {"door2", "assets/Icons/M_Door_02.png"},
-                                                 {"door3", "assets/Icons/M_Door_03.png"},
-                                                 {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
-                                                 {"pc", "assets/Icons/M_PC_01.png"},
-                                                 {"poster", "assets/Icons/M_Poster_01.png"},
-                                                 {"shelf", "assets/Icons/M_Shelf_01.png"},
-                                                 {"socket", "assets/Icons/M_Socket_01.png"},
-                                                 {"sofa", "assets/Icons/M_Sofa_01.png"},
-                                                 {"tv", "assets/Icons/M_TV_01.png"},
-                                                 {"top", "assets/Icons/M_Top_01.png"},
-                                                 {"trashcan", "assets/Icons/M_TrashCan_01.png"},
-                                                 {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
-                                                 {"window", "assets/Icons/M_Window_01.png"}},
-                                                windowWidth, windowHeight);
+
+		objectScale = {{"potted1",0.2f},{"potted2",0.2f},{"aircondition",0.2f},
+			{"bed",0.2f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
+			{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
+			{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
+			{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+
+		IR.init(this,
+                     {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
+                      {"potted2", "assets/Icons/M_PottedPlant_02.png"},
+                      {"aircondition", "assets/Icons/M_Aircondition_01.png"},
+                      {"bed", "assets/Icons/M_Bed_01.png"},
+                      {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
+                      {"cabinet", "assets/Icons/M_Cabinet_01.png"},
+                      {"closestool", "assets/Icons/M_Closestool_01.png"},
+                      {"curtain", "assets/Icons/M_Curtain_01.png"},
+                      {"door1", "assets/Icons/M_Door_01.png"},
+                      {"door2", "assets/Icons/M_Door_02.png"},
+                      {"door3", "assets/Icons/M_Door_03.png"},
+                      {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
+                      {"pc", "assets/Icons/M_PC_01.png"},
+                      {"poster", "assets/Icons/M_Poster_01.png"},
+                      {"shelf", "assets/Icons/M_Shelf_01.png"},
+                      {"socket", "assets/Icons/M_Socket_01.png"},
+                      {"sofa", "assets/Icons/M_Sofa_01.png"},
+                      {"tv", "assets/Icons/M_TV_01.png"},
+                      {"top", "assets/Icons/M_Top_01.png"},
+                      {"trashcan", "assets/Icons/M_TrashCan_01.png"},
+                      {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
+                      {"window", "assets/Icons/M_Window_01.png"}},
+                     windowWidth, windowHeight);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -296,11 +305,15 @@ class ModularHospitalWardPlanner : public BaseProject {
 					SC.removeInstance(pit->second);
 					placedObjects.erase(pit);
 				} else {
-					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
-													glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
-													glm::scale(glm::mat4(1), glm::vec3(0.2f));
-					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
 					std::string pId = plantIds[selectedPlant];
+					float scale = 0.2f;
+					auto sit = objectScale.find(pId);
+					if(sit != objectScale.end()) scale = sit->second;
+
+					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
+										   glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+										   glm::scale(glm::mat4(1), glm::vec3(scale));
+					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
 					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], plantTr, DSL);
 					placedObjects[gkey] = id;
 				}
