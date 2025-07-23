@@ -39,7 +39,7 @@ struct IconMaker {
                                 });
                 DSL.init(BP, {{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}});
                 P.init(BP, &VD, "shaders/TextVert.spv", "shaders/TextFrag.spv", {&DSL});
-                P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, true);
+                P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, false);
                 P.create();
 
                 dx = 2.0f * 64.0f / windowWidth;
@@ -59,10 +59,10 @@ struct IconMaker {
 
         void createQuad(Model<IconVertex> &M) {
                 M.vertices = {
-                        {{startX, startY}, {0.0f, 1.0f}},
-                        {{startX + dx, startY}, {1.0f, 1.0f}},
-                        {{startX, startY + dy}, {0.0f, 0.0f}},
-                        {{startX + dx, startY + dy}, {1.0f, 0.0f}}
+                        {{startX, startY}, {0.0f, 0.0f}},
+                        {{startX + dx, startY}, {1.0f, 0.0f}},
+                        {{startX, startY + dy}, {0.0f, 1.0f}},
+                        {{startX + dx, startY + dy}, {1.0f, 1.0f}}
                 };
                 M.indices = {0,1,2,1,2,3};
         }
