@@ -109,7 +109,7 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 	}
 
 	int addInstance(const std::string &id, int meshIdx, int texIdx,
-					const glm::mat4 &transform, DescriptorSetLayout &DSL) {
+								const glm::mat4 &transform, DescriptorSetLayout &DSL) {
 		int idx = InstanceCount;
 		InstanceCount++;
 		I = (Instance *)realloc(I, InstanceCount * sizeof(Instance));
@@ -129,6 +129,23 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 
 		InstanceIds[id] = idx;
 		return idx;
+	}
+
+	void updateInstance(const std::string &id, int meshIdx, int texIdx,
+						DescriptorSetLayout &DSL) {
+		auto it = InstanceIds.find(id);
+		if(it == InstanceIds.end()) return;
+		int idx = it->second;
+
+		I[idx].Mid = meshIdx;
+		I[idx].Tid = texIdx;
+
+		DS[idx]->cleanup();
+		DS[idx]->init(BP, &DSL, {
+								{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
+								{1, TEXTURE, 0, T[texIdx]},
+								{2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+						});
 	}
 
 	void removeInstance(const std::string &id) {
