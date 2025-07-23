@@ -276,11 +276,37 @@ class ModularHospitalWardPlanner : public BaseProject {
 		lookAng -= r.y * ROT_SPEED * deltaT;
 		lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
 		DlookAng = lookAng;
-//std::cout << DlookAng;
+
+		// Discrete movement using WASD keys
+		static bool wKey = false, aKey = false, sKey = false, dKey = false;
+		constexpr float GRID_SIZE = 5.0f;
+		float snappedAngMove = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+		glm::vec3 forwardDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
+		glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
+
+		auto stepMove = [&](int key, bool &flag, const glm::vec3 &dir) {
+			if(glfwGetKey(window, key)) {
+				if(!flag) {
+					flag = true;
+					glm::vec3 newPos = Pos + dir * GRID_SIZE;
+					int gx = static_cast<int>(std::round(newPos.x / GRID_SIZE));
+					int gz = static_cast<int>(std::round(newPos.z / GRID_SIZE));
+					newPos.x = GRID_SIZE * gx;
+					newPos.z = GRID_SIZE * gz;
+					Pos = newPos;
+				}
+			} else {
+				if(flag) flag = false;
+			}
+		};
+
+		stepMove(GLFW_KEY_W, wKey,  forwardDir);
+		stepMove(GLFW_KEY_S, sKey, -forwardDir);
+		stepMove(GLFW_KEY_A, aKey, -rightDir);
+		stepMove(GLFW_KEY_D, dKey,  rightDir);
 
 		ang = DlookAng;
 		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1), ang, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
-
 
 		if(glfwGetKey(window, GLFW_KEY_SPACE)) {
 			if(!debounce) {

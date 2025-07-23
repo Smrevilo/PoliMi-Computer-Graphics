@@ -1,7 +1,3 @@
 # ninja log v6
-6	13051	1753274688963364958	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-13055	13297	1753274702012125880	Modular_Hospital_Ward_Planner	192071b549bc60ca
-9	9983	1753275603530928999	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-9987	10180	1753275613509035103	Modular_Hospital_Ward_Planner	192071b549bc60ca
-42	11244	1753279190309362223	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-11248	11568	1753279201516179958	Modular_Hospital_Ward_Planner	192071b549bc60ca
+15	11367	1753280294345921509	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
+11370	11659	1753280305701265131	Modular_Hospital_Ward_Planner	192071b549bc60ca
