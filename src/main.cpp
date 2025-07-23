@@ -266,7 +266,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 		const float ROT_SPEED = glm::radians(360.0f);
 		const float MOVE_SPEED = 10.0f;
 		int ghostId = SC.InstanceIds["ge"];
-		static float ang = 0.0f;
 		static float lookAng = 0;
 		static float DlookAng = 0;
 		static int subpass = 0;
@@ -308,9 +307,18 @@ class ModularHospitalWardPlanner : public BaseProject {
 		stepMove(GLFW_KEY_A, aKey, -rightDir);
 		stepMove(GLFW_KEY_D, dKey,  rightDir);
 
-		ang = DlookAng;
-		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1), ang, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+		// Update ghost object position so it matches the placement logic
+		float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+		glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
+		glm::vec3 ghostPos = Pos + forward * GRID_SIZE;
+		int ggx = static_cast<int>(std::round(ghostPos.x / GRID_SIZE));
+		int ggz = static_cast<int>(std::round(ghostPos.z / GRID_SIZE));
+		ghostPos.x = GRID_SIZE * ggx;
+		ghostPos.z = GRID_SIZE * ggz;
+		ghostPos.y = 0.0f;
 
+		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), ghostPos) * glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+		
 		if(glfwGetKey(window, GLFW_KEY_SPACE)) {
 			if(!debounce) {
 				debounce = true;
