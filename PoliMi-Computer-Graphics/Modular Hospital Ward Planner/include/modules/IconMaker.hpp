@@ -38,7 +38,7 @@ struct IconMaker {
                                   {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(IconVertex,texCoord), sizeof(glm::vec2), UV}
                                 });
                 DSL.init(BP, {{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}});
-                P.init(BP, &VD, "shaders/TextVert.spv", "shaders/TextFrag.spv", {&DSL});
+                P.init(BP, &VD, "shaders/IconVert.spv", "shaders/IconFrag.spv", {&DSL});
                 P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, false);
                 P.create();
 
