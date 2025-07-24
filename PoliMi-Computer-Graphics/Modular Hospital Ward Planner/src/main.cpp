@@ -68,6 +68,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	glm::vec3 Pos;
 	glm::vec3 InitialPos;
 	glm::vec3 InitialScale;
+	float objectRotation = 0.0f;
 
 	std::unordered_map<std::pair<int,int>, std::string, GridCoordHash> placedObjects;
 	int spawnCounter = 0;
@@ -317,8 +318,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 		ghostPos.z = GRID_SIZE * ggz;
 		ghostPos.y = 0.0f;
 
-		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), ghostPos) * glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
-		
+		float ghostRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), ghostPos) * glm::rotate(glm::mat4(1), ghostRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+
 		if(glfwGetKey(window, GLFW_KEY_SPACE)) {
 			if(!debounce) {
 				debounce = true;
@@ -347,8 +349,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 					auto sit = objectScale.find(pId);
 					if(sit != objectScale.end()) scale = sit->second;
 
+					float plantRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+
 					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
-										   glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+										   glm::rotate(glm::mat4(1), plantRot, glm::vec3(0,1,0)) *
 										   glm::scale(glm::mat4(1), glm::vec3(scale));
 					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
 					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], plantTr, DSL);
@@ -370,38 +374,68 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 		if(glfwGetKey(window, GLFW_KEY_Q)) {
-			if(!debounce) {
-				debounce = true;
-				curDebounce = GLFW_KEY_Q;
-				selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
-				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+                        if(!debounce) {
+                                debounce = true;
+                                curDebounce = GLFW_KEY_Q;
+                                objectRotation -= glm::half_pi<float>();
+                                if(objectRotation < 0)
+                                        objectRotation += glm::two_pi<float>();
+                        }
+                } else {
+                        if((curDebounce == GLFW_KEY_Q) && debounce) {
+                                debounce = false;
+                                curDebounce = 0;
+                        }
+                }
 
-				InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
-				SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
-								   SC.TextureIds[plantIds[selectedPlant]], DSL);
+                if(glfwGetKey(window, GLFW_KEY_E)) {
+                        if(!debounce) {
+                                debounce = true;
+                                curDebounce = GLFW_KEY_E;
+                                objectRotation += glm::half_pi<float>();
+                                if(objectRotation > glm::two_pi<float>())
+                                        objectRotation -= glm::two_pi<float>();
+                        }
+                } else {
+                        if((curDebounce == GLFW_KEY_E) && debounce) {
+                                debounce = false;
+                                curDebounce = 0;
+                        }
+                }
 
-				vkDeviceWaitIdle(device);
-				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+                if(glfwGetKey(window, GLFW_KEY_N)) {
+                        if(!debounce) {
+                                debounce = true;
+                                curDebounce = GLFW_KEY_N;
+                                selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
+                                std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
+
+                                InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
+                                SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
+                                                                   SC.TextureIds[plantIds[selectedPlant]], DSL);
+
+                                vkDeviceWaitIdle(device);
+                                vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
                                                        commandBuffers.data());
-				createCommandBuffers();
-			}
-		} else {
-			if((curDebounce == GLFW_KEY_Q) && debounce) {
-				debounce = false;
-				curDebounce = 0;
-			}
-		}
+                        	createCommandBuffers();
+                        }
+                } else {
+                	if((curDebounce == GLFW_KEY_N) && debounce) {
+                		debounce = false;
+                		curDebounce = 0;
+                	}
+                }
 
-		if(glfwGetKey(window, GLFW_KEY_E)) {
+		if(glfwGetKey(window, GLFW_KEY_M)) {
 			if(!debounce) {
 				debounce = true;
-				curDebounce = GLFW_KEY_E;
+				curDebounce = GLFW_KEY_M;
 				selectedPlant = (selectedPlant + 1) % plantIds.size();
 				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
 
 				InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
 				SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
-								   SC.TextureIds[plantIds[selectedPlant]], DSL);
+												   SC.TextureIds[plantIds[selectedPlant]], DSL);
 
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
@@ -409,7 +443,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 				createCommandBuffers();
 			}
 		} else {
-			if((curDebounce == GLFW_KEY_E) && debounce) {
+			if((curDebounce == GLFW_KEY_M) && debounce) {
 				debounce = false;
 				curDebounce = 0;
 			}
