@@ -41,25 +41,30 @@ if(APPLE)
     # Link libraries
     target_link_libraries(Modular_Hospital_Ward_Planner PRIVATE Vulkan::Vulkan glfw Threads::Threads)
 
-    # Shader setup for macOS
-    file(GLOB SPIRV_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.spv")
-
-    # Debug: print the found SPIR-V files
-    message(STATUS "Found SPIR-V files: ${SPIRV_SOURCE_FILES}")
-
-    # Create the directory 'shaders' in the build directory
+    # Shader compilation for macOS
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
 
-    # Copy the SPIR-V files from the source 'shaders' directory to the build directory
-    foreach(SPV_FILE ${SPIRV_SOURCE_FILES})
-        message(STATUS "Copying SPIR-V file: ${SPV_FILE}")
-        file(COPY ${SPV_FILE} DESTINATION ${CMAKE_BINARY_DIR}/shaders)
+    file(GLOB GLSL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag")
+
+    set(SPIRV_BINARY_FILES "")
+    foreach(GLSL ${GLSL_SOURCE_FILES})
+        get_filename_component(FILE_NAME ${GLSL} NAME_WE)
+        string(REPLACE "Shader" "" FILE_NAME ${FILE_NAME})
+        get_filename_component(FILE_EXT ${GLSL} EXT)
+        set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}${FILE_EXT}.spv)
+        string(REPLACE ".vert" "Vert" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".frag" "Frag" SPV_FILE ${SPV_FILE})
+
+        add_custom_command(
+                OUTPUT ${SPV_FILE}
+                COMMAND glslangValidator -V ${GLSL} -o ${SPV_FILE}
+                DEPENDS ${GLSL}
+                COMMENT "Compiling shader: ${GLSL}"
+        )
+        list(APPEND SPIRV_BINARY_FILES ${SPV_FILE})
     endforeach()
 
-    # Add shader target
-    add_custom_target(Shaders DEPENDS ${SPIRV_SOURCE_FILES})
-
-    # Ensure that depends on the SPIR-V files
+    add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
     add_dependencies(Modular_Hospital_Ward_Planner Shaders)
 
     # Copy resources (textures, models, etc.) to the build directory
