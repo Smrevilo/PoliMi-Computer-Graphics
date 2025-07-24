@@ -318,6 +318,15 @@ class ModularHospitalWardPlanner : public BaseProject {
 		ghostPos.z = GRID_SIZE * ggz;
 		ghostPos.y = 0.0f;
 
+		std::pair<int,int> ghostKey = {ggx, ggz};
+		bool ghostSpotOccupied = false;
+		std::string occupiedId;
+		auto git = placedObjects.find(ghostKey);
+		if(git != placedObjects.end()) {
+			ghostSpotOccupied = true;
+			occupiedId = git->second;
+		}
+
 		float ghostRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), ghostPos) * glm::rotate(glm::mat4(1), ghostRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
 
@@ -481,11 +490,22 @@ class ModularHospitalWardPlanner : public BaseProject {
 		// updates global uniforms
 		GlobalUniformBufferObject gubo{};
 		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
-		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
-		gubo.eyeDir = glm::vec4(0);
 
 		for(int i = 0; i < SC.InstanceCount; i++) {
+			// Default uniform values
+			gubo.lightColor = glm::vec4(1.0f);
+			gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
+			gubo.eyeDir  = glm::vec4(1.0f,1.0f,1.0f,0.0f);
+
+			std::string objId = *SC.I[i].id;
+			if(objId == "ge") {
+				// Preview object
+				gubo.lightColor.w = ghostSpotOccupied ? 0.0f : 0.5f;
+			} else if(ghostSpotOccupied && objId == occupiedId) {
+				// Highlight object to be removed
+				gubo.eyeDir = glm::vec4(1.0f, 0.5f, 0.5f, 0.0f);
+			}
+
 			ubo.mMat = SC.I[i].Wm * baseTr;
 			ubo.mvpMat = ViewPrj * ubo.mMat;
 			ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
@@ -497,6 +517,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 		ubo.mMat = baseTr;
 		ubo.mvpMat = ViewPrj * ubo.mMat;
 		ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+		gubo.lightColor = glm::vec4(1.0f);
+		gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
+		gubo.eyeDir  = glm::vec4(1.0f,1.0f,1.0f,0.0f);
 		DS1.map(currentImage, &ubo, sizeof(ubo), 0);
 		DS1.map(currentImage, &gubo, sizeof(gubo), 2);
 	}

@@ -30,5 +30,7 @@ void main()
     vec3 Diffuse = Albedo * ((max(dot(Norm, gubo.lightDir), 0.0) * 0.89999997615814208984375) + 0.100000001490116119384765625);
     vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(gubo.lightDir, Norm)), 0.0), 64.0));
     vec3 Ambient = (((mix(vec3(0.180000007152557373046875, 0.119999997317790985107421875, 0.07999999821186065673828125), vec3(0.20000000298023223876953125, 0.100000001490116119384765625, 0.100000001490116119384765625), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x)) + (mix(vec3(0.100000001490116119384765625), vec3(0.0599999986588954925537109375, 0.20000000298023223876953125, 0.20000000298023223876953125), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y))) + (mix(vec3(0.0599999986588954925537109375, 0.119999997317790985107421875, 0.14000000059604644775390625), vec3(0.1599999964237213134765625, 0.039999999105930328369140625, 0.07999999821186065673828125), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z))) * Albedo;
-    outColor = vec4(((Diffuse + (Specular * (1.0 - gubo.eyeDir.w))) * gubo.lightColor.xyz) + Ambient, 1.0);
+    vec3 color = ((Diffuse + (Specular * (1.0 - gubo.eyeDir.w))) * gubo.lightColor.xyz) + Ambient;
+    color *= gubo.eyeDir.xyz;
+    outColor = vec4(color, gubo.lightColor.w);
 }
