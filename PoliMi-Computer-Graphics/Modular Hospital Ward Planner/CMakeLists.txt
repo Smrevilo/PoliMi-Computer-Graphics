@@ -111,7 +111,11 @@ elseif(WIN32)
     set(SPIRV_BINARY_FILES "")
     foreach(GLSL ${GLSL_SOURCE_FILES})
         get_filename_component(FILE_NAME ${GLSL} NAME_WE)
-        set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}.spv)
+        string(REPLACE "Shader" "" FILE_NAME ${FILE_NAME})
+        get_filename_component(FILE_EXT ${GLSL} EXT)
+        set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}${FILE_EXT}.spv)
+        string(REPLACE ".vert" "Vert" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".frag" "Frag" SPV_FILE ${SPV_FILE})
 
         add_custom_command(
                 OUTPUT ${SPV_FILE}
@@ -163,7 +167,11 @@ elseif(UNIX AND NOT APPLE)
     set(SPIRV_BINARY_FILES "")
     foreach(GLSL ${GLSL_SOURCE_FILES})
         get_filename_component(FILE_NAME ${GLSL} NAME_WE)
-        set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}.spv)
+        string(REPLACE "Shader" "" FILE_NAME ${FILE_NAME})
+        get_filename_component(FILE_EXT ${GLSL} EXT)
+        set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}${FILE_EXT}.spv)
+        string(REPLACE ".vert" "Vert" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".frag" "Frag" SPV_FILE ${SPV_FILE})
 
         add_custom_command(
                 OUTPUT ${SPV_FILE}
