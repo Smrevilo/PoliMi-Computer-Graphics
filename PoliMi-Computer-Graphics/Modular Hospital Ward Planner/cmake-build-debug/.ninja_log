@@ -1,15 +1,13 @@
 # ninja log v6
-15	11367	1753280294345921509	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-11370	11659	1753280305701265131	Modular_Hospital_Ward_Planner	192071b549bc60ca
-13	10873	1753281527564699687	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-10875	11202	1753281538426082482	Modular_Hospital_Ward_Planner	192071b549bc60ca
-20	13988	1753282281191072878	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-13990	14278	1753282295161087994	Modular_Hospital_Ward_Planner	192071b549bc60ca
-8	14384	1753282960224502700	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-14387	14750	1753282974603618285	Modular_Hospital_Ward_Planner	192071b549bc60ca
-16	16905	1753283714462595906	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-16908	17145	1753283731354840549	Modular_Hospital_Ward_Planner	192071b549bc60ca
-91	19299	1753286344127813161	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-19302	19508	1753286363338387893	Modular_Hospital_Ward_Planner	192071b549bc60ca
-35	11482	1753342530837011207	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-11484	11923	1753342542286082554	Modular_Hospital_Ward_Planner	192071b549bc60ca
+370	10982	1753351637857701884	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
+10985	11189	1753351648472945860	Modular_Hospital_Ward_Planner	192071b549bc60ca
+9	369	1753351637842699340	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/TextVert.spv	fafff10fd01633db
+6	370	1753351637842698983	shaders/TextFrag.spv	522b867eebf9867f
+9	369	1753351637842699340	shaders/TextVert.spv	fafff10fd01633db
+6	370	1753351637842698983	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/TextFrag.spv	522b867eebf9867f
+18	352	1753356438703139237	shaders/IconFrag.spv	f24b52eef35da2b7
+18	352	1753356438703139237	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/IconFrag.spv	f24b52eef35da2b7
+21	353	1753356438703790389	shaders/IconVert.spv	d72709d5725af1cf
+21	353	1753356438703790389	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/IconVert.spv	d72709d5725af1cf
+353	12508	1753356438716074416	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
+12510	12866	1753356450874137048	Modular_Hospital_Ward_Planner	192071b549bc60ca

@@ -77,7 +77,7 @@ build Modular_Hospital_Ward_Planner: CXX_EXECUTABLE_LINKER__Modular_Hospital_War
 #############################################
 # Utility command for Shaders
 
-build Shaders: phony CMakeFiles/Shaders
+build Shaders: phony CMakeFiles/Shaders shaders/IconFrag.spv shaders/IconVert.spv shaders/TextFrag.spv shaders/TextVert.spv
 
 
 #############################################
@@ -106,7 +106,43 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 #############################################
 # Phony custom command for CMakeFiles/Shaders
 
-build CMakeFiles/Shaders | ${cmake_ninja_workdir}CMakeFiles/Shaders: phony /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/PhongFrag.spv /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/PhongVert.spv /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/ShaderFrag.spv /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/ShaderVert.spv /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/TextFrag.spv /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/TextVert.spv
+build CMakeFiles/Shaders | ${cmake_ninja_workdir}CMakeFiles/Shaders: phony shaders/IconFrag.spv shaders/IconVert.spv shaders/TextFrag.spv shaders/TextVert.spv
+
+
+#############################################
+# Custom command for shaders/IconFrag.spv
+
+build shaders/IconFrag.spv | ${cmake_ninja_workdir}shaders/IconFrag.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/IconShader.frag
+  COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/IconShader.frag -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/IconFrag.spv
+  DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/IconShader.frag
+  restat = 1
+
+
+#############################################
+# Custom command for shaders/IconVert.spv
+
+build shaders/IconVert.spv | ${cmake_ninja_workdir}shaders/IconVert.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/IconShader.vert
+  COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/IconShader.vert -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/IconVert.spv
+  DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/IconShader.vert
+  restat = 1
+
+
+#############################################
+# Custom command for shaders/TextFrag.spv
+
+build shaders/TextFrag.spv | ${cmake_ninja_workdir}shaders/TextFrag.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/TextShader.frag
+  COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/TextShader.frag -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/TextFrag.spv
+  DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/TextShader.frag
+  restat = 1
+
+
+#############################################
+# Custom command for shaders/TextVert.spv
+
+build shaders/TextVert.spv | ${cmake_ninja_workdir}shaders/TextVert.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/TextShader.vert
+  COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/TextShader.vert -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/TextVert.spv
+  DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/TextShader.vert
+  restat = 1
 
 # =============================================================================
 # Target aliases.
