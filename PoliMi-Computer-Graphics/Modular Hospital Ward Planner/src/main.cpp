@@ -87,9 +87,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		// Descriptor pool sizes
 		// allow for many dynamically spawned objects
-		uniformBlocksInPool = 64 * 2 + 2;
-		texturesInPool = 64 + 1 + 1;
-		setsInPool = 64 + 1 + 1;
+		uniformBlocksInPool = 2000;
+		texturesInPool = 1000;
+		setsInPool = 1000;
 
 		Ar = 4.0f / 3.0f;
 	}
