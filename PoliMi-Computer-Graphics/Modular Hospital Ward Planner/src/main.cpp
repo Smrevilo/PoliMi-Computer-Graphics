@@ -124,8 +124,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		// Pipelines [Shader couples]
 		P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
+		// Enable transparency so the preview object can be hidden when
+		// standing on an occupied grid spot
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
- 								    VK_CULL_MODE_NONE, false);
+															VK_CULL_MODE_NONE, true);
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 		M1.vertices = {{{-100.0,0.0f,-100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}},
