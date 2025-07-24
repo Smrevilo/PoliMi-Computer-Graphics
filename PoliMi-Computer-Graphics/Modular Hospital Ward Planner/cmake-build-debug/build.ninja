@@ -77,7 +77,7 @@ build Modular_Hospital_Ward_Planner: CXX_EXECUTABLE_LINKER__Modular_Hospital_War
 #############################################
 # Utility command for Shaders
 
-build Shaders: phony CMakeFiles/Shaders shaders/IconFrag.spv shaders/IconVert.spv shaders/TextFrag.spv shaders/TextVert.spv
+build Shaders: phony CMakeFiles/Shaders shaders/IconFrag.spv shaders/IconVert.spv shaders/PhongFrag.spv shaders/PhongVert.spv shaders/TextFrag.spv shaders/TextVert.spv
 
 
 #############################################
@@ -106,7 +106,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 #############################################
 # Phony custom command for CMakeFiles/Shaders
 
-build CMakeFiles/Shaders | ${cmake_ninja_workdir}CMakeFiles/Shaders: phony shaders/IconFrag.spv shaders/IconVert.spv shaders/TextFrag.spv shaders/TextVert.spv
+build CMakeFiles/Shaders | ${cmake_ninja_workdir}CMakeFiles/Shaders: phony shaders/IconFrag.spv shaders/IconVert.spv shaders/PhongFrag.spv shaders/PhongVert.spv shaders/TextFrag.spv shaders/TextVert.spv
 
 
 #############################################
@@ -124,6 +124,24 @@ build shaders/IconFrag.spv | ${cmake_ninja_workdir}shaders/IconFrag.spv: CUSTOM_
 build shaders/IconVert.spv | ${cmake_ninja_workdir}shaders/IconVert.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/IconShader.vert
   COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/IconShader.vert -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/IconVert.spv
   DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/IconShader.vert
+  restat = 1
+
+
+#############################################
+# Custom command for shaders/PhongFrag.spv
+
+build shaders/PhongFrag.spv | ${cmake_ninja_workdir}shaders/PhongFrag.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/PhongShader.frag
+  COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/PhongShader.frag -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/PhongFrag.spv
+  DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/PhongShader.frag
+  restat = 1
+
+
+#############################################
+# Custom command for shaders/PhongVert.spv
+
+build shaders/PhongVert.spv | ${cmake_ninja_workdir}shaders/PhongVert.spv: CUSTOM_COMMAND /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular$ Hospital$ Ward$ Planner/shaders/PhongShader.vert
+  COMMAND = cd "/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug" && glslangValidator -V /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/shaders/PhongShader.vert -o /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular\ Hospital\ Ward\ Planner/cmake-build-debug/shaders/PhongVert.spv
+  DESC = Compiling shader: /Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/shaders/PhongShader.vert
   restat = 1
 
 
