@@ -41,26 +41,34 @@ if(APPLE)
     # Link libraries
     target_link_libraries(Modular_Hospital_Ward_Planner PRIVATE Vulkan::Vulkan glfw Threads::Threads)
 
-    # Shader setup for macOS
-    file(GLOB SPIRV_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.spv")
-
-    # Debug: print the found SPIR-V files
-    message(STATUS "Found SPIR-V files: ${SPIRV_SOURCE_FILES}")
+    # Compile GLSL shaders to SPIR-V just like on other platforms
+    file(GLOB GLSL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag")
 
     # Create the directory 'shaders' in the build directory
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
 
     # Copy the SPIR-V files from the source 'shaders' directory to the build directory
-    foreach(SPV_FILE ${SPIRV_SOURCE_FILES})
-        message(STATUS "Copying SPIR-V file: ${SPV_FILE}")
-        file(COPY ${SPV_FILE} DESTINATION ${CMAKE_BINARY_DIR}/shaders)
+    set(SPIRV_BINARY_FILES "")
+    foreach(GLSL ${GLSL_SOURCE_FILES})
+        get_filename_component(FILE_NAME ${GLSL} NAME_WE)
+        set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}.spv)
+        add_custom_command(
+                OUTPUT ${SPV_FILE}
+                COMMAND glslangValidator -V ${GLSL} -o ${SPV_FILE}
+                DEPENDS ${GLSL}
+                COMMENT "Compiling shader: ${GLSL}"
+        )
+        list(APPEND SPIRV_BINARY_FILES ${SPV_FILE})
     endforeach()
 
-    # Add shader target
-    add_custom_target(Shaders DEPENDS ${SPIRV_SOURCE_FILES})
-
-    # Ensure that depends on the SPIR-V files
+    # Custom target that compiles all shaders
+    add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
     add_dependencies(Modular_Hospital_Ward_Planner Shaders)
+
+    # Also copy any precompiled SPIR-V shaders that already exist
+    file(GLOB SHADER_SPV_FILES "${CMAKE_SOURCE_DIR}/shaders/*.spv")
+    file(COPY ${SHADER_SPV_FILES} DESTINATION ${CMAKE_BINARY_DIR}/shaders)
+
 
     # Copy resources (textures, models, etc.) to the build directory
     file(COPY ${CMAKE_SOURCE_DIR}/assets/textures DESTINATION ${CMAKE_BINARY_DIR}/assets)
