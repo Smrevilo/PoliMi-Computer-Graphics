@@ -1513,10 +1513,11 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		poolSizes[1].descriptorCount = static_cast<uint32_t>(texturesInPool *
 															 swapChainImages.size());
 															 
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());;
-		poolInfo.pPoolSizes = poolSizes.data();
+    	VkDescriptorPoolCreateInfo poolInfo{};
+    	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    	poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = static_cast<uint32_t>(setsInPool * swapChainImages.size());
 		
 		VkResult result = vkCreateDescriptorPool(device, &poolInfo, nullptr,
