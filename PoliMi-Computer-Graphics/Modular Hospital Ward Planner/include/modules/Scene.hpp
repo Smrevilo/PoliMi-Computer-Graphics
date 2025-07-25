@@ -202,13 +202,15 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 		free(I);
 	}
 	
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, Pipeline &P) {
+	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, Pipeline &P, bool skipGhost = false) {
 		for(int i = 0; i < InstanceCount; i++) {
+			std::string objId = *I[i].id;
+			if(skipGhost && objId == "ge") continue;
 			M[I[i].Mid]->bind(commandBuffer);
 			DS[i]->bind(commandBuffer, P, 0, currentImage);
-						
+
 			vkCmdDrawIndexed(commandBuffer,
-					static_cast<uint32_t>(M[I[i].Mid]->indices.size()), 1, 0, 0, 0);
+							static_cast<uint32_t>(M[I[i].Mid]->indices.size()), 1, 0, 0, 0);
 		}
 	}
 };

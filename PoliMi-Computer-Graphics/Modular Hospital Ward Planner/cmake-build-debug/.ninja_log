@@ -1,23 +1,15 @@
 # ninja log v6
-5	10128	1753357343582959544	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-8	341	1753357328483959794	shaders/IconFrag.spv	f24b52eef35da2b7
-31	388	1753358630215620639	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/TextFrag.spv	522b867eebf9867f
-10130	10327	1753357353707523509	Modular_Hospital_Ward_Planner	192071b549bc60ca
-380	548	1753358630386271338	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/TextVert.spv	fafff10fd01633db
-380	548	1753358630386271338	shaders/TextVert.spv	fafff10fd01633db
-8	341	1753357328483959794	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/IconFrag.spv	f24b52eef35da2b7
-9	340	1753357328483969500	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/IconVert.spv	d72709d5725af1cf
-28	380	1753358630214834755	shaders/PhongFrag.spv	b1aea557709aa499
-9	340	1753357328483969500	shaders/IconVert.spv	d72709d5725af1cf
-28	380	1753358630214834755	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/PhongFrag.spv	b1aea557709aa499
-31	388	1753358630215620639	shaders/TextFrag.spv	522b867eebf9867f
-30	381	1753358630214856973	shaders/PhongVert.spv	4b4a5383138b08bb
-30	381	1753358630214856973	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/PhongVert.spv	4b4a5383138b08bb
-34	284	1753359526877305370	shaders/PhongFrag.spv	b1aea557709aa499
-34	284	1753359526877305370	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/PhongFrag.spv	b1aea557709aa499
-285	11297	1753359526890855314	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-11299	11542	1753359537905801637	Modular_Hospital_Ward_Planner	192071b549bc60ca
-13	21087	1753360616768040521	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-21091	21489	1753360637846246017	Modular_Hospital_Ward_Planner	192071b549bc60ca
-33	16262	1753436193505641088	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
-16269	16477	1753436209741791991	Modular_Hospital_Ward_Planner	192071b549bc60ca
+1778	19239	1753444185418802610	CMakeFiles/Modular_Hospital_Ward_Planner.dir/src/main.cpp.o	b2b2e30b1309c85e
+16	1360	1753444184984612975	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/PhongFrag.spv	b1aea557709aa499
+19249	19578	1753444202890466002	Modular_Hospital_Ward_Planner	192071b549bc60ca
+1376	1763	1753444185390041983	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/TextFrag.spv	522b867eebf9867f
+10	1377	1753444185002856611	shaders/IconFrag.spv	f24b52eef35da2b7
+1377	1778	1753444185395728788	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/TextVert.spv	fafff10fd01633db
+1377	1778	1753444185395728788	shaders/TextVert.spv	fafff10fd01633db
+10	1377	1753444185002856611	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/IconFrag.spv	f24b52eef35da2b7
+12	1375	1753444185001769915	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/IconVert.spv	d72709d5725af1cf
+16	1360	1753444184984612975	shaders/PhongFrag.spv	b1aea557709aa499
+12	1375	1753444185001769915	shaders/IconVert.spv	d72709d5725af1cf
+1361	1778	1753444185397152585	shaders/PhongVert.spv	4b4a5383138b08bb
+1376	1763	1753444185390041983	shaders/TextFrag.spv	522b867eebf9867f
+1361	1778	1753444185397152585	/Users/oliverstege/Desktop/Polimi/NSDS/PoliMi-Computer-Graphics/PoliMi-Computer-Graphics/Modular Hospital Ward Planner/cmake-build-debug/shaders/PhongVert.spv	4b4a5383138b08bb
