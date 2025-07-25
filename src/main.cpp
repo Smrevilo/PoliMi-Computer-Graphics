@@ -75,6 +75,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 	std::vector<std::string> plantIds;
 	int selectedPlant = 0;
 	std::unordered_map<std::string, float> objectScale;
+	bool ghostSpotOccupied = false;
+	bool prevGhostSpotOccupied = false;
+	std::string occupiedId;
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -251,7 +254,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		vkCmdDrawIndexed(commandBuffer,
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
-		SC.populateCommandBuffer(commandBuffer, currentImage, P);
+		SC.populateCommandBuffer(commandBuffer, currentImage, P, ghostSpotOccupied);
 		IR.populateCommandBuffer(commandBuffer, currentImage, plantIds[selectedPlant]);
 	}
 
@@ -321,12 +324,21 @@ class ModularHospitalWardPlanner : public BaseProject {
 		ghostPos.y = 0.0f;
 
 		std::pair<int,int> ghostKey = {ggx, ggz};
-		bool ghostSpotOccupied = false;
-		std::string occupiedId;
+		ghostSpotOccupied = false;
+		occupiedId.clear();
 		auto git = placedObjects.find(ghostKey);
 		if(git != placedObjects.end()) {
 			ghostSpotOccupied = true;
 			occupiedId = git->second;
+		}
+
+		if(ghostSpotOccupied != prevGhostSpotOccupied) {
+			vkDeviceWaitIdle(device);
+			vkFreeCommandBuffers(device, commandPool,
+							   static_cast<uint32_t>(commandBuffers.size()),
+							   commandBuffers.data());
+			createCommandBuffers();
+			prevGhostSpotOccupied = ghostSpotOccupied;
 		}
 
 		float ghostRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
