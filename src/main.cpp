@@ -8,6 +8,7 @@
 #include <cmath>
 #include <glm/gtc/constants.hpp>
 #include <unordered_map>
+#include <unordered_set>
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -54,6 +55,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 	// Pipelines [Shader couples]
 	Pipeline P;
+	Pipeline P_Transparent;
 
 	// Models
 	Model<Vertex> M1;
@@ -74,6 +76,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	std::vector<std::string> plantIds;
 	int selectedPlant = 0;
 	std::unordered_map<std::string, float> objectScale;
+	std::unordered_set<std::string> transparentObjects;
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -86,9 +89,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		// Descriptor pool sizes
 		// allow for many dynamically spawned objects
-		uniformBlocksInPool = 64 * 2 + 2;
-		texturesInPool = 64 + 1 + 1;
-		setsInPool = 64 + 1 + 1;
+		uniformBlocksInPool = 2000;
+		texturesInPool = 1000;
+		setsInPool = 1000;
 
 		Ar = 4.0f / 3.0f;
 	}
@@ -125,6 +128,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 		P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_NONE, false);
+		
+		P_Transparent.init(this, &VD, "shaders/PhongVert.spv", "shaders/TransparentFrag.spv", {&DSL});
+		P_Transparent.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+ 								    VK_CULL_MODE_NONE, true);  // true enables blending for transparency
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 		M1.vertices = {{{-100.0,0.0f,-100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}},
@@ -141,6 +148,8 @@ class ModularHospitalWardPlanner : public BaseProject {
 		// Init local variables
 		Pos = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[3]);
 		InitialPos = Pos;
+
+		transparentObjects.insert("ge");
 
 		plantIds = {"potted1", "potted2",
                              "aircondition", "bed", "bulletinboard", "cabinet",
@@ -184,8 +193,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 	// Here you create your pipelines and Descriptor Sets!
 	void pipelinesAndDescriptorSetsInit() {
-		// This creates a new pipeline (with the current surface), using its shaders
+		// Create both pipelines
 		P.create();
+		P_Transparent.create();
 
 		DS1.init(this, &DSL, {
 						{0, UNIFORM, sizeof(UniformBufferObject), nullptr},
@@ -204,8 +214,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 	// Here you destroy your pipelines and Descriptor Sets!
 	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
 	void pipelinesAndDescriptorSetsCleanup() {
-		// Cleanup pipelines
+		// Cleanup both pipelines
 		P.cleanup();
+		P_Transparent.cleanup();
 		DS1.cleanup();
 
 		SC.pipelinesAndDescriptorSetsCleanup();
@@ -220,8 +231,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 		// Cleanup descriptor set layouts
 		DSL.cleanup();
 
-		// Destroies the pipelines
+		// Destroies pipelines
 		P.destroy();
+		P_Transparent.destroy();
 
 		// Cleanup models
 		M1.cleanup();
@@ -235,20 +247,48 @@ class ModularHospitalWardPlanner : public BaseProject {
 	// with their buffers and textures
 
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-		// binds the pipeline
+		// Draw M1 model (floor/ground) - always use filled pipeline
 		P.bind(commandBuffer);
-
-		// binds the data set
 		DS1.bind(commandBuffer, P, 0, currentImage);
-
-		// binds the model
 		M1.bind(commandBuffer);
-
-		// record the drawing command in the command buffer
 		vkCmdDrawIndexed(commandBuffer,
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
-		SC.populateCommandBuffer(commandBuffer, currentImage, P);
+		// draw not transparent objects
+		for(int i = 0; i < SC.InstanceCount; i++) {
+			std::string instanceId = *SC.I[i].id;
+			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
+			
+			if(shouldBeTransparent) continue;
+			
+			P.bind(commandBuffer);
+			
+			SC.M[SC.I[i].Mid]->bind(commandBuffer);
+			SC.DS[i]->bind(commandBuffer, P, 0, currentImage);
+			
+			// Draw the object
+			vkCmdDrawIndexed(commandBuffer,
+				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
+		}
+
+		// draw transparent objects
+		for(int i = 0; i < SC.InstanceCount; i++) {
+			std::string instanceId = *SC.I[i].id;
+			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
+			
+			if(!shouldBeTransparent) continue;
+			
+			P_Transparent.bind(commandBuffer);
+			
+			SC.M[SC.I[i].Mid]->bind(commandBuffer);
+			SC.DS[i]->bind(commandBuffer, P_Transparent, 0, currentImage);
+			
+			// Draw the object
+			vkCmdDrawIndexed(commandBuffer,
+				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
+		}
+
+		// Draw UI icons
 		IR.populateCommandBuffer(commandBuffer, currentImage, plantIds[selectedPlant]);
 	}
 
@@ -419,6 +459,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 				curDebounce = 0;
 			}
 		}
+
 		// Standard procedure to quit when the ESC key is pressed
 		if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
 			glfwSetWindowShouldClose(window, GL_TRUE);
