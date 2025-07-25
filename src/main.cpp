@@ -154,11 +154,11 @@ class ModularHospitalWardPlanner : public BaseProject {
                              "nursesstation", "pc", "poster", "shelf", "socket",
                              "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
 
-		objectScale = {{"potted1",0.2f},{"potted2",0.2f},{"aircondition",0.2f},
-		{"bed",0.02f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
-		{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
-		{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
-		{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+		objectScale = {{"potted1",0.05f},{"potted2",0.05f},{"aircondition",0.06f},
+		{"bed",0.05f},{"bulletinboard",0.06f},{"cabinet",0.05f},{"closestool",0.05f},
+		{"curtain",0.04f},{"door1",0.04f},{"door2",0.04f},{"door3",0.04f},{"nursesstation",0.03f},
+		{"pc",0.05f},{"poster",0.05f},{"shelf",0.05f},{"socket",0.05f},{"sofa",0.05f},{"tv",0.05f},
+		{"top",0.03f},{"trashcan",0.05f},{"wardrobe",0.04f},{"window",0.05f}};
 
 		InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
 
