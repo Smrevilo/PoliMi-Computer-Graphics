@@ -22,9 +22,7 @@ layout(binding = 2) uniform GlobalUniformBufferObject {
 } gubo;
 
 void main() {
-	vec3 X = dFdx(fragPos);
-	vec3 Y = dFdy(fragPos);
-	vec3 Norm = normalize(cross(X,Y));
+	vec3 Norm = normalize(fragNorm);
 
 	vec3 EyeDir = normalize(gubo.eyePos - fragPos);
 	
@@ -44,7 +42,10 @@ void main() {
 				   (Norm.y > 0 ? cyp : cyn) * (Norm.y * Norm.y) +
 				   (Norm.z > 0 ? czp : czn) * (Norm.z * Norm.z))* Albedo;
 	
-	// Make the object semitransparent (more transparent for better visibility)
+	// Make the object semitransparent with enhanced colors for visibility
 	vec3 finalColor = (Diffuse + Specular) * gubo.lightColor.rgb + Ambient;
-	outColor = vec4(finalColor, 0.3);
+	
+	finalColor = finalColor * 1.5 + Albedo * 0.3;
+	
+	outColor = vec4(finalColor, 0.6);
 }
