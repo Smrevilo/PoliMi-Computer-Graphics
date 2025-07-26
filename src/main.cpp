@@ -36,8 +36,8 @@ struct Vertex {
 #include "modules/Scene.hpp"
 
 struct GridCoordHash {
-	size_t operator()(const std::pair<int,int>& p) const noexcept {
-		return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
+	size_t operator()(const std::tuple<int,int,int>& p) const noexcept {
+		return std::hash<int>()(std::get<0>(p)) ^ (std::hash<int>()(std::get<1>(p)) << 1) ^ (std::hash<int>()(std::get<2>(p)) << 2);
 	}
 };
 
@@ -70,7 +70,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	glm::vec3 InitialScale;
 	float objectRotation = 0.0f;
 
-	std::unordered_map<std::pair<int,int>, std::string, GridCoordHash> placedObjects;
+	std::unordered_map<std::tuple<int,int,int>, std::string, GridCoordHash> placedObjects;
 	int spawnCounter = 0;
 	std::vector<std::string> plantIds;
 	int selectedPlant = 0;
@@ -280,33 +280,45 @@ class ModularHospitalWardPlanner : public BaseProject {
 		lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
 		DlookAng = lookAng;
 
-		// Discrete movement using WASD keys
-		static bool wKey = false, aKey = false, sKey = false, dKey = false;
-		constexpr float GRID_SIZE = 5.0f;
+		// Discrete movement using WASD + shift + ctrl keys
+		static bool wKey = false, aKey = false, sKey = false, dKey = false, shift = false, ctrl = false;
+		constexpr float GRID_SIZE = 1.0f;
 		float snappedAngMove = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
 		glm::vec3 forwardDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
 		glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
+		glm::vec3 upDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0, 1.0f, 0, 0));
 
+		static float movementTimer = 0.0f;
+		const float MOVEMENT_DIFF = 0.08f;
+		//the flag is not used, but i kept it so that it can be re-implemented if needed
 		auto stepMove = [&](int key, bool &flag, const glm::vec3 &dir) {
-			if(glfwGetKey(window, key)) {
+			if(glfwGetKey(window, key) && movementTimer <= 0.0f) {
+				movementTimer = MOVEMENT_DIFF;
 				if(!flag) {
-					flag = true;
+					//flag = true;
 					glm::vec3 newPos = Pos + dir * GRID_SIZE;
 					int gx = static_cast<int>(std::round(newPos.x / GRID_SIZE));
 					int gz = static_cast<int>(std::round(newPos.z / GRID_SIZE));
+					int gy = static_cast<int>(std::round(newPos.y / GRID_SIZE));
 					newPos.x = GRID_SIZE * gx;
 					newPos.z = GRID_SIZE * gz;
+					newPos.y = GRID_SIZE * gy;
+					if(newPos.y < 0.0f) newPos.y = 0.0f;
 					Pos = newPos;
 				}
 			} else {
 				if(flag) flag = false;
 			}
 		};
+		movementTimer -= deltaT;
+		if(movementTimer < 0.0f) movementTimer = 0.0f;
 
 		stepMove(GLFW_KEY_W, wKey,  forwardDir);
 		stepMove(GLFW_KEY_S, sKey, -forwardDir);
 		stepMove(GLFW_KEY_A, aKey, -rightDir);
 		stepMove(GLFW_KEY_D, dKey,  rightDir);
+		stepMove(GLFW_KEY_LEFT_SHIFT, shift,  upDir);
+		stepMove(GLFW_KEY_LEFT_CONTROL, ctrl,  -upDir);
 
 		// Update ghost object position so it matches the placement logic
 		float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
@@ -314,9 +326,11 @@ class ModularHospitalWardPlanner : public BaseProject {
 		glm::vec3 ghostPos = Pos + forward * GRID_SIZE;
 		int ggx = static_cast<int>(std::round(ghostPos.x / GRID_SIZE));
 		int ggz = static_cast<int>(std::round(ghostPos.z / GRID_SIZE));
+		int ggy = static_cast<int>(std::round(ghostPos.y / GRID_SIZE));
 		ghostPos.x = GRID_SIZE * ggx;
 		ghostPos.z = GRID_SIZE * ggz;
-		ghostPos.y = 0.0f;
+		ghostPos.y = GRID_SIZE * ggy;
+		if(ghostPos.y < 0.0f) ghostPos.y = 0.0f;
 
 		float ghostRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), ghostPos) * glm::rotate(glm::mat4(1), ghostRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
@@ -326,7 +340,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
 
-				constexpr float GRID_SIZE = 5.0f;
+				constexpr float GRID_SIZE = 1.0f;
 				float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
 
 				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
@@ -334,10 +348,11 @@ class ModularHospitalWardPlanner : public BaseProject {
 				glm::vec3 placePos = Pos + forward * GRID_SIZE;
 				int gx = static_cast<int>(std::round(placePos.x / GRID_SIZE));
 				int gz = static_cast<int>(std::round(placePos.z / GRID_SIZE));
+				int gy = static_cast<int>(std::round(placePos.y / GRID_SIZE));
 				placePos.x = GRID_SIZE * gx;
 				placePos.z = GRID_SIZE * gz;
-				placePos.y = 0.0f;
-				std::pair<int,int> gkey = {gx, gz};
+				placePos.y = GRID_SIZE * gy;
+				std::tuple<int,int,int> gkey = {gx, gz, gy};
 
 				auto pit = placedObjects.find(gkey);
 				if(pit != placedObjects.end()) {
