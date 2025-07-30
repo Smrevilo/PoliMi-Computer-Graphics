@@ -1,6 +1,6 @@
 {
 	"models": [
-		{"id": "ge",   "model": "assets/models/cast_Mesh.6268.mgcg", "format":"MGCG"},
+		{"id": "obj",   "model": "assets/models/cast_Mesh.6268.mgcg", "format":"MGCG"},
 		{"id": "floor",   "model": "assets/models/M_Floor_01.mgcg", "format":"MGCG"},
 		{"id": "wall",   "model": "assets/models/M_Wall_01.mgcg", "format":"MGCG"},
 		{"id": "barrel2",   "model": "assets/models/barrel.002_Mesh.4450.mgcg", "format":"MGCG"},
@@ -62,9 +62,9 @@
 	],
 
 	"instances": [
-		{"id": "ge",   "model": "ge",   "texture": "t0",
-		 "transform": [5, 0, 0, 60,
-					   0, 5, 0, 5,
+		{"id": "obj",   "model": "obj",   "texture": "t0",
+		 "transform": [5, 0, 0, 0,
+					   0, 5, 0, 0,
 					   0, 0, 5, 0,
 					   0, 0, 0, 1]
 		},
