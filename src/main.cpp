@@ -140,7 +140,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		SC.init(this, &VD, DSL, P, "assets/models/scene.json");
 
 		// Init local variables
-		Pos = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[3]);
+		Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
 		InitialPos = Pos;
 
 		objIds = {"potted1", "potted2",
@@ -199,7 +199,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		IR.pipelinesAndDescriptorSetsInit();
 
 		// Update the preview instance now that descriptor sets are ready
-		SC.updateInstance("ge", SC.MeshIds[objIds[selectedObj]], SC.TextureIds[objIds[selectedObj]], DSL);
+		SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]], SC.TextureIds[objIds[selectedObj]], DSL);
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -266,7 +266,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		const float ROT_SPEED = glm::radians(360.0f);
 		const float MOVE_SPEED = 10.0f;
-		int ghostId = SC.InstanceIds["ge"];
+		int objectId = SC.InstanceIds["obj"];
 		static float lookAng = 0;
 		static float DlookAng = 0;
 		static int subpass = 0;
@@ -320,20 +320,20 @@ class ModularHospitalWardPlanner : public BaseProject {
 		stepMove(GLFW_KEY_LEFT_SHIFT, shift,  upDir);
 		stepMove(GLFW_KEY_LEFT_CONTROL, ctrl,  -upDir);
 
-		// Update ghost object position so it matches the placement logic
+		// Update object position so it matches the placement logic
 		float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
 		glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
-		glm::vec3 ghostPos = Pos + forward * GRID_SIZE;
-		int ggx = static_cast<int>(std::round(ghostPos.x / GRID_SIZE));
-		int ggz = static_cast<int>(std::round(ghostPos.z / GRID_SIZE));
-		int ggy = static_cast<int>(std::round(ghostPos.y / GRID_SIZE));
-		ghostPos.x = GRID_SIZE * ggx;
-		ghostPos.z = GRID_SIZE * ggz;
-		ghostPos.y = GRID_SIZE * ggy;
-		if(ghostPos.y < 0.0f) ghostPos.y = 0.0f;
+		glm::vec3 objectPos = Pos + forward * GRID_SIZE;
+		int ggx = static_cast<int>(std::round(objectPos.x / GRID_SIZE));
+		int ggz = static_cast<int>(std::round(objectPos.z / GRID_SIZE));
+		int ggy = static_cast<int>(std::round(objectPos.y / GRID_SIZE));
+		objectPos.x = GRID_SIZE * ggx;
+		objectPos.z = GRID_SIZE * ggz;
+		objectPos.y = GRID_SIZE * ggy;
+		if(objectPos.y < 0.0f) objectPos.y = 0.0f;
 
-		float ghostRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
-		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), ghostPos) * glm::rotate(glm::mat4(1), ghostRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+		float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+		SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
 
 		if(glfwGetKey(window, GLFW_KEY_SPACE)) {
 			if(!debounce) {
@@ -365,13 +365,13 @@ class ModularHospitalWardPlanner : public BaseProject {
 					auto sit = objectScale.find(pId);
 					if(sit != objectScale.end()) scale = sit->second;
 
-					float plantRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+					float objRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 
-					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
-										   glm::rotate(glm::mat4(1), plantRot, glm::vec3(0,1,0)) *
+					glm::mat4 objTr = glm::translate(glm::mat4(1), placePos) *
+										   glm::rotate(glm::mat4(1), objRot, glm::vec3(0,1,0)) *
 										   glm::scale(glm::mat4(1), glm::vec3(scale));
-					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
-					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], plantTr, DSL);
+					std::string id = pId + "_spawn_" + std::to_string(spawnCounter++);
+					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], objTr, DSL);
 					placedObjects[gkey] = id;
 				}
 				// Re-record command buffers so the new instance
@@ -424,10 +424,10 @@ class ModularHospitalWardPlanner : public BaseProject {
                                 debounce = true;
                                 curDebounce = GLFW_KEY_N;
                                 selectedObj = (selectedObj + objIds.size() - 1) % objIds.size();
-                                std::cout << "Selected plant: " << objIds[selectedObj] << "\n";
+                                std::cout << "Selected object: " << objIds[selectedObj] << "\n";
 
                                 InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
-                                SC.updateInstance("ge", SC.MeshIds[objIds[selectedObj]],
+                                SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
                                                                    SC.TextureIds[objIds[selectedObj]], DSL);
 
                                 vkDeviceWaitIdle(device);
@@ -447,10 +447,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 				debounce = true;
 				curDebounce = GLFW_KEY_M;
 				selectedObj = (selectedObj + 1) % objIds.size();
-				std::cout << "Selected plant: " << objIds[selectedObj] << "\n";
+				std::cout << "Selected object: " << objIds[selectedObj] << "\n";
 
 				InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
-				SC.updateInstance("ge", SC.MeshIds[objIds[selectedObj]],
+				SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
 												   SC.TextureIds[objIds[selectedObj]], DSL);
 
 				vkDeviceWaitIdle(device);
