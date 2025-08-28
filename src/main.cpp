@@ -352,7 +352,9 @@ class ModularHospitalWardPlanner : public BaseProject {
 				placePos.x = GRID_SIZE * gx;
 				placePos.z = GRID_SIZE * gz;
 				placePos.y = GRID_SIZE * gy;
+
 				std::cout << "Placing object at: " << placePos.x << ", " << placePos.y << ", " << placePos.z << "\n";
+
 				std::tuple<int,int,int> gkey = {gx, gz, gy};
 
 				auto pit = placedObjects.find(gkey);
