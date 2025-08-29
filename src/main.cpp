@@ -478,24 +478,32 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 
+		//perspective projection matrix with 60° FOV, aspect ratio Ar, near plane 0.1f, far plane 500.0f
 		glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
+		
+		//flip y axis for vulkan coordinate system
 		M[1][1] *= -1;
 
+		//set camera offset
 		glm::vec3 cameraOffset = glm::vec3(-35.0f, 70.0f, 35.0f);
 		glm::vec3 cameraPos = Pos + cameraOffset;
+
+		//create view matrix looking from camerapos to pos, with up direction 0,1,0
 		glm::mat4 Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
 
+		//combine projection and view matrices for rendering
 		glm::mat4 ViewPrj =  M * Mv;
 		UniformBufferObject ubo{};
 		glm::mat4 baseTr = glm::mat4(1.0f);
 
-		// updates global uniforms
+		// updates global uniforms with light and eye positions
 		GlobalUniformBufferObject gubo{};
 		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
 		gubo.eyeDir = glm::vec4(0);
 
+		// updates all the instance uniform buffers
 		for(int i = 0; i < SC.InstanceCount; i++) {
 			ubo.mMat = SC.I[i].Wm * baseTr;
 			ubo.mvpMat = ViewPrj * ubo.mMat;
@@ -505,9 +513,17 @@ class ModularHospitalWardPlanner : public BaseProject {
 			SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
 
+		// mMat is a member of the UniformBufferObject struct: 
+		// it holds the model matrix, which transforms an object's local coordinates to world coordinates
+		// the object being positioned is at the origin and needs no model matrix
 		ubo.mMat = baseTr;
 		ubo.mvpMat = ViewPrj * ubo.mMat;
+		//normal matrix: used to transform normals for lighting
 		ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+		//DS1: descriptor set for the first object
+		//.map: maps the uniform buffer object and global uniform buffer object to the descriptor set
+		//		(eventually) uploading the data to the GPU
+		//currentimage: index of the swapchain image being rendered
 		DS1.map(currentImage, &ubo, sizeof(ubo), 0);
 		DS1.map(currentImage, &gubo, sizeof(gubo), 2);
 	}
