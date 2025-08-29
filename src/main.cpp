@@ -83,7 +83,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		windowHeight = 600;
                 windowTitle = "Modular Hospital Ward Planner";
     	windowResizable = GLFW_TRUE;
-		initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
+		initialBackgroundColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
 		// Descriptor pool sizes
 		// allow for many dynamically spawned objects
@@ -270,11 +270,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		static float lookAng = 0;
 		static float DlookAng = 0;
 		static int subpass = 0;
-		static float subpassTimer = 0.0;
-
-		m.y = 0;
-		m = glm::vec3(glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) * glm::vec4(m, 1));
-		Pos += m * MOVE_SPEED * deltaT;
+		static float subpassTimer = 0.0f;
 
 		lookAng -= r.y * ROT_SPEED * deltaT;
 		lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
@@ -291,46 +287,35 @@ class ModularHospitalWardPlanner : public BaseProject {
 		static float movementTimer = 0.0f;
 		const float MOVEMENT_DIFF = 0.08f;
 		//the flag is not used, but i kept it so that it can be re-implemented if needed
-		auto stepMove = [&](int key, bool &flag, const glm::vec3 &dir) {
-			if(glfwGetKey(window, key) && movementTimer <= 0.0f) {
+
+		//lambda function to handle movement, given pressed key and direction
+		auto stepMove = [&](const glm::vec3 &dir) {
+			if(movementTimer <= 0.0f) {
 				movementTimer = MOVEMENT_DIFF;
-				if(!flag) {
-					//flag = true;
-					glm::vec3 newPos = Pos + dir * GRID_SIZE;
-					int gx = static_cast<int>(std::round(newPos.x / GRID_SIZE));
-					int gz = static_cast<int>(std::round(newPos.z / GRID_SIZE));
-					int gy = static_cast<int>(std::round(newPos.y / GRID_SIZE));
-					newPos.x = GRID_SIZE * gx;
-					newPos.z = GRID_SIZE * gz;
-					newPos.y = GRID_SIZE * gy;
-					if(newPos.y < 0.0f) newPos.y = 0.0f;
-					Pos = newPos;
-				}
-			} else {
-				if(flag) flag = false;
+				glm::vec3 newPos = Pos + dir * GRID_SIZE;
+				newPos = glm::vec3(
+            		GRID_SIZE * std::round(newPos.x / GRID_SIZE),
+            		std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
+            		GRID_SIZE * std::round(newPos.z / GRID_SIZE)
+        		);
+				Pos = newPos;
 			}
+
 		};
 		movementTimer -= deltaT;
 		if(movementTimer < 0.0f) movementTimer = 0.0f;
 
-		stepMove(GLFW_KEY_W, wKey,  forwardDir);
-		stepMove(GLFW_KEY_S, sKey, -forwardDir);
-		stepMove(GLFW_KEY_A, aKey, -rightDir);
-		stepMove(GLFW_KEY_D, dKey,  rightDir);
-		stepMove(GLFW_KEY_LEFT_SHIFT, shift,  upDir);
-		stepMove(GLFW_KEY_LEFT_CONTROL, ctrl,  -upDir);
+		stepMove(m);
 
 		// Update object position so it matches the placement logic
 		float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
 		glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
 		glm::vec3 objectPos = Pos + forward * GRID_SIZE;
-		int ggx = static_cast<int>(std::round(objectPos.x / GRID_SIZE));
-		int ggz = static_cast<int>(std::round(objectPos.z / GRID_SIZE));
-		int ggy = static_cast<int>(std::round(objectPos.y / GRID_SIZE));
-		objectPos.x = GRID_SIZE * ggx;
-		objectPos.z = GRID_SIZE * ggz;
-		objectPos.y = GRID_SIZE * ggy;
-		if(objectPos.y < 0.0f) objectPos.y = 0.0f;
+		/*objectPos = glm::vec3(
+			GRID_SIZE * std::round(objectPos.x / GRID_SIZE),
+			std::max(0.0f, GRID_SIZE * std::round(objectPos.y / GRID_SIZE)),
+			GRID_SIZE * std::round(objectPos.z / GRID_SIZE)
+		);*/
 
 		float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 		SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
