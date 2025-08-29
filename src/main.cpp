@@ -285,38 +285,36 @@ class ModularHospitalWardPlanner : public BaseProject {
 		glm::vec3 upDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0, 1.0f, 0, 0));
 
 		static float movementTimer = 0.0f;
-		const float MOVEMENT_DIFF = 0.08f;
-		//the flag is not used, but i kept it so that it can be re-implemented if needed
-
+		static glm::vec3 prevMoveDir = glm::vec3(0.0f);
+		const float MOVEMENT_DIFF = 0.5f; // half second between moves
 		//lambda function to handle movement, given pressed key and direction
 		auto stepMove = [&](const glm::vec3 &dir) {
-			if(movementTimer <= 0.0f) {
+			if(glm::length(dir) > 0.0f) {
 				movementTimer = MOVEMENT_DIFF;
 				glm::vec3 newPos = Pos + dir * GRID_SIZE;
 				newPos = glm::vec3(
-            		GRID_SIZE * std::round(newPos.x / GRID_SIZE),
-            		std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
-            		GRID_SIZE * std::round(newPos.z / GRID_SIZE)
-        		);
+					GRID_SIZE * std::round(newPos.x / GRID_SIZE),
+					std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
+					GRID_SIZE * std::round(newPos.z / GRID_SIZE)
+				);
 				Pos = newPos;
 			}
-
 		};
 		movementTimer -= deltaT;
 		if(movementTimer < 0.0f) movementTimer = 0.0f;
 
-		stepMove(m);
+		// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
+		if(glm::length(m) > 0.0f) {
+			if(movementTimer <= 0.0f || m != prevMoveDir) {
+				stepMove(m);
+			}
+		}
+		prevMoveDir = m;
 
 		// Update object position so it matches the placement logic
-		float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
-		glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
-		glm::vec3 objectPos = Pos + forward * GRID_SIZE;
-		/*objectPos = glm::vec3(
-			GRID_SIZE * std::round(objectPos.x / GRID_SIZE),
-			std::max(0.0f, GRID_SIZE * std::round(objectPos.y / GRID_SIZE)),
-			GRID_SIZE * std::round(objectPos.z / GRID_SIZE)
-		);*/
+		glm::vec3 objectPos = Pos + forwardDir * GRID_SIZE;
 
+		// Update object rotation
 		float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 		SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
 
@@ -325,22 +323,12 @@ class ModularHospitalWardPlanner : public BaseProject {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
 
-				constexpr float GRID_SIZE = 2.0f;
-				float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
-
-				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
-												  glm::vec4(0,0,-1.0f,0));
-				glm::vec3 placePos = Pos + forward * GRID_SIZE;
-				int gx = static_cast<int>(std::round(placePos.x / GRID_SIZE));
-				int gz = static_cast<int>(std::round(placePos.z / GRID_SIZE));
-				int gy = static_cast<int>(std::round(placePos.y / GRID_SIZE));
-				placePos.x = GRID_SIZE * gx;
-				placePos.z = GRID_SIZE * gz;
-				placePos.y = GRID_SIZE * gy;
+				glm::vec3 placePos = Pos + forwardDir * GRID_SIZE;
+				placePos = GRID_SIZE * glm::round(placePos / GRID_SIZE);
 
 				std::cout << "Placing object at: " << placePos.x << ", " << placePos.y << ", " << placePos.z << "\n";
 
-				std::tuple<int,int,int> gkey = {gx, gz, gy};
+				std::tuple<int,int,int> gkey = {placePos.x, placePos.y, placePos.z};
 
 				auto pit = placedObjects.find(gkey);
 				if(pit != placedObjects.end()) {
@@ -369,68 +357,80 @@ class ModularHospitalWardPlanner : public BaseProject {
 									commandBuffers.data());
 				createCommandBuffers();
 			}
-		} else {
-			if((curDebounce == GLFW_KEY_SPACE) && debounce) {
+		} else if((curDebounce == GLFW_KEY_SPACE) && debounce) {
+			debounce = false;
+			curDebounce = 0;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_Q))
+		{
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_Q;
+				objectRotation -= glm::half_pi<float>();
+				if (objectRotation < 0)
+					objectRotation += glm::two_pi<float>();
+			}
+		}
+		else if ((curDebounce == GLFW_KEY_Q) && debounce)
+		{
+			debounce = false;
+			curDebounce = 0;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_E))
+		{
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_E;
+				objectRotation += glm::half_pi<float>();
+				if (objectRotation > glm::two_pi<float>())
+					objectRotation -= glm::two_pi<float>();
+			}
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_E) && debounce)
+			{
 				debounce = false;
 				curDebounce = 0;
 			}
 		}
 
-		if(glfwGetKey(window, GLFW_KEY_Q)) {
-                        if(!debounce) {
-                                debounce = true;
-                                curDebounce = GLFW_KEY_Q;
-                                objectRotation -= glm::half_pi<float>();
-                                if(objectRotation < 0)
-                                        objectRotation += glm::two_pi<float>();
-                        }
-                } else {
-                        if((curDebounce == GLFW_KEY_Q) && debounce) {
-                                debounce = false;
-                                curDebounce = 0;
-                        }
-                }
+		if (glfwGetKey(window, GLFW_KEY_N))
+		{
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_N;
+				selectedObj = (selectedObj + objIds.size() - 1) % objIds.size();
+				std::cout << "Selected object: " << objIds[selectedObj] << "\n";
 
-                if(glfwGetKey(window, GLFW_KEY_E)) {
-                        if(!debounce) {
-                                debounce = true;
-                                curDebounce = GLFW_KEY_E;
-                                objectRotation += glm::half_pi<float>();
-                                if(objectRotation > glm::two_pi<float>())
-                                        objectRotation -= glm::two_pi<float>();
-                        }
-                } else {
-                        if((curDebounce == GLFW_KEY_E) && debounce) {
-                                debounce = false;
-                                curDebounce = 0;
-                        }
-                }
+				InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+				SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
+								  SC.TextureIds[objIds[selectedObj]], DSL);
 
-                if(glfwGetKey(window, GLFW_KEY_N)) {
-                        if(!debounce) {
-                                debounce = true;
-                                curDebounce = GLFW_KEY_N;
-                                selectedObj = (selectedObj + objIds.size() - 1) % objIds.size();
-                                std::cout << "Selected object: " << objIds[selectedObj] << "\n";
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+									 commandBuffers.data());
+				createCommandBuffers();
+			}
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_N) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
 
-                                InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
-                                SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
-                                                                   SC.TextureIds[objIds[selectedObj]], DSL);
-
-                                vkDeviceWaitIdle(device);
-                                vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
-                                                       commandBuffers.data());
-                        	createCommandBuffers();
-                        }
-                } else {
-                	if((curDebounce == GLFW_KEY_N) && debounce) {
-                		debounce = false;
-                		curDebounce = 0;
-                	}
-                }
-
-		if(glfwGetKey(window, GLFW_KEY_M)) {
-			if(!debounce) {
+		if (glfwGetKey(window, GLFW_KEY_M))
+		{
+			if (!debounce)
+			{
 				debounce = true;
 				curDebounce = GLFW_KEY_M;
 				selectedObj = (selectedObj + 1) % objIds.size();
@@ -438,28 +438,36 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 				InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
 				SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
-												   SC.TextureIds[objIds[selectedObj]], DSL);
+								  SC.TextureIds[objIds[selectedObj]], DSL);
 
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
-                                                       commandBuffers.data());
+									 commandBuffers.data());
 				createCommandBuffers();
 			}
-		} else {
-			if((curDebounce == GLFW_KEY_M) && debounce) {
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_M) && debounce)
+			{
 				debounce = false;
 				curDebounce = 0;
 			}
 		}
 
-		if(glfwGetKey(window, GLFW_KEY_P)) {
-			if(!debounce) {
+		if (glfwGetKey(window, GLFW_KEY_P))
+		{
+			if (!debounce)
+			{
 				debounce = true;
 				curDebounce = GLFW_KEY_P;
 				printVec3("Pos = ", Pos);
 			}
-		} else {
-			if((curDebounce == GLFW_KEY_P) && debounce) {
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_P) && debounce)
+			{
 				debounce = false;
 				curDebounce = 0;
 			}
