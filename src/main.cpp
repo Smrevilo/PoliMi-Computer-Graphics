@@ -149,11 +149,11 @@ class ModularHospitalWardPlanner : public BaseProject {
                              "nursesstation", "pc", "poster", "shelf", "socket",
                              "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
 
-		objectScale = {{"potted1",0.2f},{"potted2",0.2f},{"aircondition",0.2f},
-		{"bed",0.02f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
-		{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
-		{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
-		{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+		objectScale = {{"potted1",0.15f},{"potted2",0.15f},{"aircondition",0.12f},
+		{"bed",0.1f},{"bulletinboard",0.12f},{"cabinet",0.12f},{"closestool",0.12f},
+		{"curtain",0.1f},{"door1",0.1f},{"door2",0.1f},{"door3",0.1f},{"nursesstation",0.1f},
+		{"pc",0.1f},{"poster",0.15f},{"shelf",0.1f},{"socket",0.1f},{"sofa",0.12f},{"tv",0.1f},
+		{"top",0.01f},{"trashcan",0.1f},{"wardrobe",0.1f},{"window",0.1f}};
 
 		InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
 
@@ -286,7 +286,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		static float movementTimer = 0.0f;
 		static glm::vec3 prevMoveDir = glm::vec3(0.0f);
-		const float MOVEMENT_DIFF = 0.5f; // half second between moves
+		const float MOVEMENT_DIFF = 0.1f; //time between movements
 		//lambda function to handle movement, given pressed key and direction
 		auto stepMove = [&](const glm::vec3 &dir) {
 			if(glm::length(dir) > 0.0f) {
@@ -486,7 +486,8 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		//set camera offset
 		glm::vec3 cameraOffset = glm::vec3(-35.0f, 70.0f, 35.0f);
-		glm::vec3 cameraPos = Pos + cameraOffset;
+		cameraOffset = cameraOffset * glm::mat3(0.8f); //quick way for modifying camera distance
+		glm::vec3 cameraPos = Pos * glm::vec3(1.0f, 0.0f, 1.0f) + cameraOffset;
 
 		//create view matrix looking from camerapos to pos, with up direction 0,1,0
 		glm::mat4 Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
