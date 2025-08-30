@@ -44,7 +44,7 @@ if(APPLE)
     # Shader compilation for macOS
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
 
-    file(GLOB GLSL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag")
+    file(GLOB GLSL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag" "${CMAKE_SOURCE_DIR}/shaders/*.tesc" "${CMAKE_SOURCE_DIR}/shaders/*.tese")
 
     set(SPIRV_BINARY_FILES "")
     foreach(GLSL ${GLSL_SOURCE_FILES})
@@ -54,6 +54,8 @@ if(APPLE)
         set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}${FILE_EXT}.spv)
         string(REPLACE ".vert" "Vert" SPV_FILE ${SPV_FILE})
         string(REPLACE ".frag" "Frag" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".tesc" "Tesc" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".tese" "Tese" SPV_FILE ${SPV_FILE})
 
         add_custom_command(
                 OUTPUT ${SPV_FILE}
@@ -159,7 +161,7 @@ elseif(UNIX AND NOT APPLE)
 
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
 
-    file(GLOB GLSL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag")
+    file(GLOB GLSL_SOURCE_FILES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag" "${CMAKE_SOURCE_DIR}/shaders/*.tesc" "${CMAKE_SOURCE_DIR}/shaders/*.tese")
 
     set(SPIRV_BINARY_FILES "")
     foreach(GLSL ${GLSL_SOURCE_FILES})
@@ -169,6 +171,8 @@ elseif(UNIX AND NOT APPLE)
         set(SPV_FILE ${CMAKE_BINARY_DIR}/shaders/${FILE_NAME}${FILE_EXT}.spv)
         string(REPLACE ".vert" "Vert" SPV_FILE ${SPV_FILE})
         string(REPLACE ".frag" "Frag" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".tesc" "Tesc" SPV_FILE ${SPV_FILE})
+        string(REPLACE ".tese" "Tese" SPV_FILE ${SPV_FILE})
 
         add_custom_command(
                 OUTPUT ${SPV_FILE}
