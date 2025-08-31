@@ -104,6 +104,22 @@ void savePlacedObjects(const std::string& filename = "placed_objects.txt") {
 	}
 }
 void loadPlacedObjects(const std::string& filename = "placed_objects.txt") {
+	//remove all previously spawned instances to avoid duplicates
+	{
+		std::vector<std::string> toRemove;
+		toRemove.reserve(SC.InstanceCount);
+		for (int i = 0; i < SC.InstanceCount; ++i) {
+			if (SC.I[i].id && SC.I[i].id->find("_spawn_") != std::string::npos) {
+				toRemove.push_back(*SC.I[i].id);
+			}
+		}
+		if (!toRemove.empty()) {
+			vkDeviceWaitIdle(device);
+			for (const auto& rid : toRemove) {
+				SC.removeInstance(rid);
+			}
+		}
+	}
 
 	placedObjects.clear();
 
@@ -114,6 +130,7 @@ void loadPlacedObjects(const std::string& filename = "placed_objects.txt") {
 		std::string id;
 		int x, y, z;
 		if (iss >> id >> x >> y >> z) {
+			std::cout << "Loading object id: " << id << " at position (" << x << ", " << y << ", " << z << ")\n";
 			std::string baseId = id.substr(0, id.find("_spawn_"));
 			float scale = 0.2f;
 			auto sit = objectScale.find(baseId);
@@ -449,15 +466,24 @@ void handleInput() {
 				glm::vec3 placePos = Pos + forwardDir * GRID_SIZE;
 				placePos = GRID_SIZE * glm::round(placePos / GRID_SIZE);
 
-				std::cout << "Placing object at: " << placePos.x << ", " << placePos.y << ", " << placePos.z << "\n";
-
-				std::tuple<int,int,int> gkey = {placePos.x, placePos.y, placePos.z};
+				int gx = static_cast<int>(placePos.x);
+				int gy = static_cast<int>(placePos.y);
+				int gz = static_cast<int>(placePos.z);
+				std::tuple<int,int,int> gkey = {gx, gy, gz};
 
 				auto pit = placedObjects.find(gkey);
+
 				if(pit != placedObjects.end()) {
+				std::cout << "Removing object at: " << gx << ", " << gy << ", " << gz << "\n";
+
+					// Ensure GPU is idle so we don't destroy buffers still in use
+					vkDeviceWaitIdle(device);
 					SC.removeInstance(pit->second);
 					placedObjects.erase(pit);
 				} else {
+					std::cout << "No object found at (" << gx << ", " << gy << ", " << gz << ") to remove.\n";
+				std::cout << "Placing object at: " << gx << ", " << gy << ", " << gz << "\n";
+
 					std::string pId = objIds[selectedObj];
 					float scale = 0.2f;
 					auto sit = objectScale.find(pId);
