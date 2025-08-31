@@ -18,6 +18,7 @@ bld/
 [Oo]bj/
 
 # CMake
+cmake-build-*/
 CMakeCache.txt
 CMakeFiles
 CMakeScripts

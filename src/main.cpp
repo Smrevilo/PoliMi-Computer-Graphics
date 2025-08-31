@@ -37,8 +37,8 @@ struct Vertex {
 #include "modules/Scene.hpp"
 
 struct GridCoordHash {
-	size_t operator()(const std::pair<int,int>& p) const noexcept {
-		return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
+	size_t operator()(const std::tuple<int,int,int>& p) const noexcept {
+		return std::hash<int>()(std::get<0>(p)) ^ (std::hash<int>()(std::get<1>(p)) << 1) ^ (std::hash<int>()(std::get<2>(p)) << 2);
 	}
 };
 
@@ -70,13 +70,65 @@ class ModularHospitalWardPlanner : public BaseProject {
 	glm::vec3 Pos;
 	glm::vec3 InitialPos;
 	glm::vec3 InitialScale;
+	float objectRotation = 0.0f;
 
-	std::unordered_map<std::pair<int,int>, std::string, GridCoordHash> placedObjects;
+	std::unordered_map<std::tuple<int,int,int>, std::string, GridCoordHash> placedObjects;
 	int spawnCounter = 0;
-	std::vector<std::string> plantIds;
-	int selectedPlant = 0;
+	std::vector<std::string> objIds;
+	int selectedObj = 0;
 	std::unordered_map<std::string, float> objectScale;
 	std::unordered_set<std::string> transparentObjects;
+
+	// First person view mode
+	bool firstPersonMode = false;
+	glm::vec3 fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+	glm::vec3 fpCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 fpCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	float fpCameraYaw = -90.0f;
+	float fpCameraPitch = 0.0f;
+	float fpCameraSpeed = 3.0f;
+	// Mouse movement for FPV
+	double lastMouseX = 0.0, lastMouseY = 0.0;
+	double mouseDeltaX = 0.0, mouseDeltaY = 0.0;
+	bool mouseInitialized = false;
+// Helper to check key state
+bool isKeyPressed(int key) {
+	return glfwGetKey(window, key) == GLFW_PRESS;
+}
+
+// Mouse callback for GLFW
+static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+	ModularHospitalWardPlanner* app = reinterpret_cast<ModularHospitalWardPlanner*>(glfwGetWindowUserPointer(window));
+	if (!app->mouseInitialized) {
+		app->lastMouseX = xpos;
+		app->lastMouseY = ypos;
+		app->mouseInitialized = true;
+	}
+	app->mouseDeltaX = xpos - app->lastMouseX;
+	app->mouseDeltaY = ypos - app->lastMouseY;
+	app->lastMouseX = xpos;
+	app->lastMouseY = ypos;
+}
+
+// Handle input for toggling first person mode and mouse movement
+void handleInput() {
+	static bool fKeyPrev = false;
+	bool fKeyNow = isKeyPressed(GLFW_KEY_F);
+	if (fKeyNow && !fKeyPrev) {
+		firstPersonMode = !firstPersonMode;
+		// Optionally reset camera position/orientation
+		if (firstPersonMode) {
+			fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+			fpCameraYaw = -90.0f;
+			fpCameraPitch = 0.0f;
+			mouseInitialized = false;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		} else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+	}
+	fKeyPrev = fKeyNow;
+}
 
 	// Here you set the main application parameters
 	void setWindowParameters() {
@@ -85,7 +137,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		windowHeight = 600;
                 windowTitle = "Modular Hospital Ward Planner";
     	windowResizable = GLFW_TRUE;
-		initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
+		initialBackgroundColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
 		// Descriptor pool sizes
 		// allow for many dynamically spawned objects
@@ -146,49 +198,50 @@ class ModularHospitalWardPlanner : public BaseProject {
 		SC.init(this, &VD, DSL, P, "assets/models/scene.json");
 
 		// Init local variables
-		Pos = glm::vec3(SC.I[SC.InstanceIds["ge"]].Wm[3]);
+		Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
 		InitialPos = Pos;
+		objIds = {"potted1", "potted2",
 
-		transparentObjects.insert("ge");
-
-		plantIds = {"potted1", "potted2",
                              "aircondition", "bed", "bulletinboard", "cabinet",
                              "closestool", "curtain", "door1", "door2", "door3",
                              "nursesstation", "pc", "poster", "shelf", "socket",
                              "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
 
-		objectScale = {{"potted1",0.2f},{"potted2",0.2f},{"aircondition",0.2f},
-		{"bed",0.02f},{"bulletinboard",0.2f},{"cabinet",0.2f},{"closestool",0.2f},
-		{"curtain",0.2f},{"door1",0.2f},{"door2",0.2f},{"door3",0.2f},{"nursesstation",0.2f},
-		{"pc",0.2f},{"poster",0.2f},{"shelf",0.2f},{"socket",0.2f},{"sofa",0.2f},{"tv",0.2f},
-		{"top",0.2f},{"trashcan",0.2f},{"wardrobe",0.2f},{"window",0.2f}};
+		objectScale = {{"potted1",0.15f},{"potted2",0.15f},{"aircondition",0.12f},
+		{"bed",0.1f},{"bulletinboard",0.12f},{"cabinet",0.12f},{"closestool",0.12f},
+		{"curtain",0.1f},{"door1",0.1f},{"door2",0.1f},{"door3",0.1f},{"nursesstation",0.1f},
+		{"pc",0.1f},{"poster",0.15f},{"shelf",0.1f},{"socket",0.1f},{"sofa",0.12f},{"tv",0.1f},
+		{"top",0.01f},{"trashcan",0.1f},{"wardrobe",0.1f},{"window",0.1f}};
 
-		InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
+		InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
 
 		IR.init(this,
-                     {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
-                      {"potted2", "assets/Icons/M_PottedPlant_02.png"},
-                      {"aircondition", "assets/Icons/M_Aircondition_01.png"},
-                      {"bed", "assets/Icons/M_Bed_01.png"},
-                      {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
-                      {"cabinet", "assets/Icons/M_Cabinet_01.png"},
-                      {"closestool", "assets/Icons/M_Closestool_01.png"},
-                      {"curtain", "assets/Icons/M_Curtain_01.png"},
-                      {"door1", "assets/Icons/M_Door_01.png"},
-                      {"door2", "assets/Icons/M_Door_02.png"},
-                      {"door3", "assets/Icons/M_Door_03.png"},
-                      {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
-                      {"pc", "assets/Icons/M_PC_01.png"},
-                      {"poster", "assets/Icons/M_Poster_01.png"},
-                      {"shelf", "assets/Icons/M_Shelf_01.png"},
-                      {"socket", "assets/Icons/M_Socket_01.png"},
-                      {"sofa", "assets/Icons/M_Sofa_01.png"},
-                      {"tv", "assets/Icons/M_TV_01.png"},
-                      {"top", "assets/Icons/M_Top_01.png"},
-                      {"trashcan", "assets/Icons/M_TrashCan_01.png"},
-                      {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
-                      {"window", "assets/Icons/M_Window_01.png"}},
-                     windowWidth, windowHeight);
+				 {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
+				  {"potted2", "assets/Icons/M_PottedPlant_02.png"},
+				  {"aircondition", "assets/Icons/M_Aircondition_01.png"},
+				  {"bed", "assets/Icons/M_Bed_01.png"},
+				  {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
+				  {"cabinet", "assets/Icons/M_Cabinet_01.png"},
+				  {"closestool", "assets/Icons/M_Closestool_01.png"},
+				  {"curtain", "assets/Icons/M_Curtain_01.png"},
+				  {"door1", "assets/Icons/M_Door_01.png"},
+				  {"door2", "assets/Icons/M_Door_02.png"},
+				  {"door3", "assets/Icons/M_Door_03.png"},
+				  {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
+				  {"pc", "assets/Icons/M_PC_01.png"},
+				  {"poster", "assets/Icons/M_Poster_01.png"},
+				  {"shelf", "assets/Icons/M_Shelf_01.png"},
+				  {"socket", "assets/Icons/M_Socket_01.png"},
+				  {"sofa", "assets/Icons/M_Sofa_01.png"},
+				  {"tv", "assets/Icons/M_TV_01.png"},
+				  {"top", "assets/Icons/M_Top_01.png"},
+				  {"trashcan", "assets/Icons/M_TrashCan_01.png"},
+				  {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
+				  {"window", "assets/Icons/M_Window_01.png"}},
+				 windowWidth, windowHeight);
+		// Set mouse callback
+		glfwSetWindowUserPointer(window, this);
+		glfwSetCursorPosCallback(window, mouseCallback);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -208,7 +261,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		IR.pipelinesAndDescriptorSetsInit();
 
 		// Update the preview instance now that descriptor sets are ready
-		SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]], SC.TextureIds[plantIds[selectedPlant]], DSL);
+		SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]], SC.TextureIds[objIds[selectedObj]], DSL);
 	}
 
 	// Here you destroy your pipelines and Descriptor Sets!
@@ -289,7 +342,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 		// Draw UI icons
-		IR.populateCommandBuffer(commandBuffer, currentImage, plantIds[selectedPlant]);
+		IR.populateCommandBuffer(commandBuffer, currentImage, objIds[selectedObj]);
 	}
 
 	// Here is where you update the uniforms.
@@ -305,85 +358,116 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 		const float ROT_SPEED = glm::radians(360.0f);
 		const float MOVE_SPEED = 10.0f;
-		int ghostId = SC.InstanceIds["ge"];
-		static float ang = 0.0f;
+		int objectId = SC.InstanceIds["obj"];
 		static float lookAng = 0;
 		static float DlookAng = 0;
 		static int subpass = 0;
-		static float subpassTimer = 0.0;
+		static float subpassTimer = 0.0f;
 
-		m.y = 0;
-		m = glm::vec3(glm::rotate(glm::mat4(1), DlookAng, glm::vec3(0,1,0)) * glm::vec4(m, 1));
-		Pos += m * MOVE_SPEED * deltaT;
+		// First person mode input and camera update
+		constexpr float GRID_SIZE = 2.0f;
+		float forwardAngle = 0.0f;
+		glm::vec3 forwardDir(0.0f);
+		if (!firstPersonMode) {
+			lookAng -= r.y * ROT_SPEED * deltaT;
+			lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
+			DlookAng = lookAng;
+			forwardAngle = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+			forwardDir = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
+			glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
+			glm::vec3 upDir = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(0, 1.0f, 0, 0));
 
-		lookAng -= r.y * ROT_SPEED * deltaT;
-		lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
-		DlookAng = lookAng;
-
-		// Discrete movement using WASD keys
-		static bool wKey = false, aKey = false, sKey = false, dKey = false;
-		constexpr float GRID_SIZE = 5.0f;
-		float snappedAngMove = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
-		glm::vec3 forwardDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
-		glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
-
-		auto stepMove = [&](int key, bool &flag, const glm::vec3 &dir) {
-			if(glfwGetKey(window, key)) {
-				if(!flag) {
-					flag = true;
+			static float movementTimer = 0.0f;
+			static glm::vec3 prevMoveDir = glm::vec3(0.0f);
+			const float MOVEMENT_DIFF = 0.1f; //time between movements
+			//lambda function to handle movement, given pressed key and direction
+			auto stepMove = [&](const glm::vec3 &dir) {
+				if(glm::length(dir) > 0.0f) {
+					movementTimer = MOVEMENT_DIFF;
 					glm::vec3 newPos = Pos + dir * GRID_SIZE;
-					int gx = static_cast<int>(std::round(newPos.x / GRID_SIZE));
-					int gz = static_cast<int>(std::round(newPos.z / GRID_SIZE));
-					newPos.x = GRID_SIZE * gx;
-					newPos.z = GRID_SIZE * gz;
+					newPos = glm::vec3(
+						GRID_SIZE * std::round(newPos.x / GRID_SIZE),
+						std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
+						GRID_SIZE * std::round(newPos.z / GRID_SIZE)
+					);
 					Pos = newPos;
 				}
-			} else {
-				if(flag) flag = false;
+			};
+			movementTimer -= deltaT;
+			if(movementTimer < 0.0f) movementTimer = 0.0f;
+
+			// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
+			if(glm::length(m) > 0.0f) {
+				if(movementTimer <= 0.0f || m != prevMoveDir) {
+					stepMove(m);
+				}
 			}
-		};
+			prevMoveDir = m;
 
-		stepMove(GLFW_KEY_W, wKey,  forwardDir);
-		stepMove(GLFW_KEY_S, sKey, -forwardDir);
-		stepMove(GLFW_KEY_A, aKey, -rightDir);
-		stepMove(GLFW_KEY_D, dKey,  rightDir);
+			// Update object position so it matches the placement logic
+			glm::vec3 objectPos = Pos + forwardDir * GRID_SIZE;
 
-		ang = DlookAng;
-		SC.I[ghostId].Wm = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1), ang, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+			// Update object rotation
+			float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+			SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+		} else {
+			// WASD movement
+			glm::vec3 moveDir(0.0f);
+			if (isKeyPressed(GLFW_KEY_W)) moveDir += fpCameraFront;
+			if (isKeyPressed(GLFW_KEY_S)) moveDir -= fpCameraFront;
+			if (isKeyPressed(GLFW_KEY_A)) moveDir -= glm::normalize(glm::cross(fpCameraFront, fpCameraUp));
+			if (isKeyPressed(GLFW_KEY_D)) moveDir += glm::normalize(glm::cross(fpCameraFront, fpCameraUp));
+			if (glm::length(moveDir) > 0.0f)
+				fpCameraPos += fpCameraSpeed * glm::normalize(moveDir) * deltaT * 10.0f;
+
+			// Mouse look: update yaw/pitch from mouse deltas
+			const float mouseSensitivity = 0.1f;
+			fpCameraYaw += mouseDeltaX * mouseSensitivity;
+			fpCameraPitch -= mouseDeltaY * mouseSensitivity;
+			// Clamp pitch
+			if (fpCameraPitch > 89.0f) fpCameraPitch = 89.0f;
+			if (fpCameraPitch < -89.0f) fpCameraPitch = -89.0f;
+			// Update fpCameraFront from yaw/pitch
+			float yawRad = glm::radians(fpCameraYaw);
+			float pitchRad = glm::radians(fpCameraPitch);
+			fpCameraFront.x = cos(pitchRad) * cos(yawRad);
+			fpCameraFront.y = sin(pitchRad);
+			fpCameraFront.z = cos(pitchRad) * sin(yawRad);
+			fpCameraFront = glm::normalize(fpCameraFront);
+			// Reset mouse deltas after use
+			mouseDeltaX = 0.0;
+			mouseDeltaY = 0.0;
+		}
 
 		if(glfwGetKey(window, GLFW_KEY_SPACE)) {
-			if(!debounce) {
+			if(!debounce && !firstPersonMode) {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
 
-				constexpr float GRID_SIZE = 5.0f;
-				float snappedAng = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+				glm::vec3 placePos = Pos + forwardDir * GRID_SIZE;
+				placePos = GRID_SIZE * glm::round(placePos / GRID_SIZE);
 
-				glm::vec3 forward = glm::vec3(glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
-												  glm::vec4(0,0,-1.0f,0));
-				glm::vec3 placePos = Pos + forward * GRID_SIZE;
-				int gx = static_cast<int>(std::round(placePos.x / GRID_SIZE));
-				int gz = static_cast<int>(std::round(placePos.z / GRID_SIZE));
-				placePos.x = GRID_SIZE * gx;
-				placePos.z = GRID_SIZE * gz;
-				placePos.y = 0.0f;
-				std::pair<int,int> gkey = {gx, gz};
+				std::cout << "Placing object at: " << placePos.x << ", " << placePos.y << ", " << placePos.z << "\n";
+
+				std::tuple<int,int,int> gkey = {placePos.x, placePos.y, placePos.z};
 
 				auto pit = placedObjects.find(gkey);
 				if(pit != placedObjects.end()) {
 					SC.removeInstance(pit->second);
 					placedObjects.erase(pit);
 				} else {
-					std::string pId = plantIds[selectedPlant];
+					std::string pId = objIds[selectedObj];
 					float scale = 0.2f;
 					auto sit = objectScale.find(pId);
 					if(sit != objectScale.end()) scale = sit->second;
 
-					glm::mat4 plantTr = glm::translate(glm::mat4(1), placePos) *
-										   glm::rotate(glm::mat4(1), snappedAng, glm::vec3(0,1,0)) *
+					float objRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+
+					glm::mat4 objTr = glm::translate(glm::mat4(1), placePos) *
+										   glm::rotate(glm::mat4(1), objRot, glm::vec3(0,1,0)) *
 										   glm::scale(glm::mat4(1), glm::vec3(scale));
-					std::string id = "potted_spawn_" + std::to_string(spawnCounter++);
-					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], plantTr, DSL);
+					std::string id = pId + "_spawn_" + std::to_string(spawnCounter++);
+					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], objTr, DSL);
 					placedObjects[gkey] = id;
 				}
 				// Re-record command buffers so the new instance
@@ -394,67 +478,140 @@ class ModularHospitalWardPlanner : public BaseProject {
 									commandBuffers.data());
 				createCommandBuffers();
 			}
-		} else {
-			if((curDebounce == GLFW_KEY_SPACE) && debounce) {
-				debounce = false;
-				curDebounce = 0;
-			}
+		} else if((curDebounce == GLFW_KEY_SPACE) && debounce) {
+			debounce = false;
+			curDebounce = 0;
 		}
 
-		if(glfwGetKey(window, GLFW_KEY_Q)) {
-			if(!debounce) {
+		if (glfwGetKey(window, GLFW_KEY_Q))
+		{
+			if (!debounce)
+			{
 				debounce = true;
 				curDebounce = GLFW_KEY_Q;
-				selectedPlant = (selectedPlant + plantIds.size() - 1) % plantIds.size();
-				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
-
-				InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
-				SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
-								   SC.TextureIds[plantIds[selectedPlant]], DSL);
-
-				vkDeviceWaitIdle(device);
-				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
-                                                       commandBuffers.data());
-				createCommandBuffers();
-			}
-		} else {
-			if((curDebounce == GLFW_KEY_Q) && debounce) {
-				debounce = false;
-				curDebounce = 0;
+				objectRotation -= glm::half_pi<float>();
+				if (objectRotation < 0)
+					objectRotation += glm::two_pi<float>();
 			}
 		}
+		else if ((curDebounce == GLFW_KEY_Q) && debounce)
+		{
+			debounce = false;
+			curDebounce = 0;
+		}
 
-		if(glfwGetKey(window, GLFW_KEY_E)) {
-			if(!debounce) {
+		if (glfwGetKey(window, GLFW_KEY_E))
+		{
+			if (!debounce)
+			{
 				debounce = true;
 				curDebounce = GLFW_KEY_E;
-				selectedPlant = (selectedPlant + 1) % plantIds.size();
-				std::cout << "Selected plant: " << plantIds[selectedPlant] << "\n";
-
-				InitialScale = glm::vec3(objectScale[plantIds[selectedPlant]]);
-				SC.updateInstance("ge", SC.MeshIds[plantIds[selectedPlant]],
-								   SC.TextureIds[plantIds[selectedPlant]], DSL);
-
-				vkDeviceWaitIdle(device);
-				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
-                                                       commandBuffers.data());
-				createCommandBuffers();
+				objectRotation += glm::half_pi<float>();
+				if (objectRotation > glm::two_pi<float>())
+					objectRotation -= glm::two_pi<float>();
 			}
-		} else {
-			if((curDebounce == GLFW_KEY_E) && debounce) {
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_E) && debounce)
+			{
 				debounce = false;
 				curDebounce = 0;
 			}
 		}
 
-		if(glfwGetKey(window, GLFW_KEY_P)) {
-			if(!debounce) {
+		if (glfwGetKey(window, GLFW_KEY_N))
+		{
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_N;
+				selectedObj = (selectedObj + objIds.size() - 1) % objIds.size();
+				std::cout << "Selected object: " << objIds[selectedObj] << "\n";
+
+				InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+				SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
+								  SC.TextureIds[objIds[selectedObj]], DSL);
+
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+									 commandBuffers.data());
+				createCommandBuffers();
+			}
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_N) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_M))
+		{
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_M;
+				selectedObj = (selectedObj + 1) % objIds.size();
+				std::cout << "Selected object: " << objIds[selectedObj] << "\n";
+
+				InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+				SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
+								  SC.TextureIds[objIds[selectedObj]], DSL);
+
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
+									 commandBuffers.data());
+				createCommandBuffers();
+			}
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_M) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_C))
+		{
+
+			firstPersonMode = !firstPersonMode;
+			// Optionally reset camera position/orientation
+			if (firstPersonMode) {
+				fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+				fpCameraYaw = -90.0f;
+				fpCameraPitch = 0.0f;
+				mouseInitialized = false;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			} else {
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_C) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+		if (glfwGetKey(window, GLFW_KEY_P))
+		{
+			if (!debounce)
+			{
 				debounce = true;
 				curDebounce = GLFW_KEY_P;
 				printVec3("Pos = ", Pos);
 			}
-		} else {
-			if((curDebounce == GLFW_KEY_P) && debounce) {
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_P) && debounce)
+			{
 				debounce = false;
 				curDebounce = 0;
 			}
@@ -466,33 +623,38 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 
-		glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
-		M[1][1] *= -1;
-
-		glm::vec3 cameraOffset = glm::vec3(-15.0f, 15.0f, 15.0f);
-		glm::vec3 cameraPos = Pos + cameraOffset;
-		glm::mat4 Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
-
-		glm::mat4 ViewPrj =  M * Mv;
 		UniformBufferObject ubo{};
-		glm::mat4 baseTr = glm::mat4(1.0f);
-
-		// updates global uniforms
 		GlobalUniformBufferObject gubo{};
+		glm::mat4 baseTr = glm::mat4(1.0f);
+		glm::mat4 ViewPrj;
+		glm::mat4 Mv;
+		if (firstPersonMode) {
+			glm::mat4 proj = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 300.0f);
+			proj[1][1] *= -1;
+			Mv = glm::lookAt(fpCameraPos, fpCameraPos + fpCameraFront, fpCameraUp);
+			ViewPrj = proj * Mv;
+			gubo.eyePos = fpCameraPos;
+		} else {
+			glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
+			M[1][1] *= -1;
+			glm::vec3 cameraOffset = glm::vec3(-35.0f, 70.0f, 35.0f);
+			cameraOffset = cameraOffset * glm::mat3(0.8f);
+			glm::vec3 cameraPos = Pos * glm::vec3(1.0f, 0.0f, 1.0f) + cameraOffset;
+			Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
+			ViewPrj = M * Mv;
+			gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
+		}
 		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
 		gubo.eyeDir = glm::vec4(0);
 
 		for(int i = 0; i < SC.InstanceCount; i++) {
 			ubo.mMat = SC.I[i].Wm * baseTr;
 			ubo.mvpMat = ViewPrj * ubo.mMat;
 			ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-
 			SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
 			SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
-
 		ubo.mMat = baseTr;
 		ubo.mvpMat = ViewPrj * ubo.mMat;
 		ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
