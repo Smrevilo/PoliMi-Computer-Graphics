@@ -47,5 +47,5 @@ void main() {
 	
 	finalColor = finalColor * 1.5 + Albedo * 0.3;
 	
-	outColor = vec4(finalColor, 0.6);
+	outColor = vec4(finalColor, 0.8);
 }

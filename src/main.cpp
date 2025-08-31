@@ -183,7 +183,7 @@ void handleInput() {
 		
 		P_Transparent.init(this, &VD, "shaders/PhongVert.spv", "shaders/TransparentFrag.spv", {&DSL});
 		P_Transparent.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
- 								    VK_CULL_MODE_NONE, true);  // true enables blending for transparency
+ 								    VK_CULL_MODE_BACK_BIT, true);  // back face culling + true enables blending for transparency
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 		M1.vertices = {{{-100.0,0.0f,-100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}},
@@ -307,39 +307,32 @@ void handleInput() {
 		vkCmdDrawIndexed(commandBuffer,
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
-		// draw not transparent objects
-		for(int i = 0; i < SC.InstanceCount; i++) {
-			std::string instanceId = *SC.I[i].id;
-			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
-			
-			if(shouldBeTransparent) continue;
-			
-			P.bind(commandBuffer);
-			
-			SC.M[SC.I[i].Mid]->bind(commandBuffer);
-			SC.DS[i]->bind(commandBuffer, P, 0, currentImage);
-			
-			// Draw the object
-			vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
-		}
+				// Ensure the preview object (id == "obj") is always transparent
+				transparentObjects.insert("obj");
 
-		// draw transparent objects
-		for(int i = 0; i < SC.InstanceCount; i++) {
-			std::string instanceId = *SC.I[i].id;
-			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
-			
-			if(!shouldBeTransparent) continue;
-			
-			P_Transparent.bind(commandBuffer);
-			
-			SC.M[SC.I[i].Mid]->bind(commandBuffer);
-			SC.DS[i]->bind(commandBuffer, P_Transparent, 0, currentImage);
-			
-			// Draw the object
-			vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
-		}
+				// draw not transparent objects
+				for(int i = 0; i < SC.InstanceCount; i++) {
+					std::string instanceId = *SC.I[i].id;
+					bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
+					if(shouldBeTransparent) continue;
+					P.bind(commandBuffer);
+					SC.M[SC.I[i].Mid]->bind(commandBuffer);
+					SC.DS[i]->bind(commandBuffer, P, 0, currentImage);
+					vkCmdDrawIndexed(commandBuffer,
+						static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
+				}
+
+				// draw transparent objects
+				for(int i = 0; i < SC.InstanceCount; i++) {
+					std::string instanceId = *SC.I[i].id;
+					bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
+					if(!shouldBeTransparent) continue;
+					P_Transparent.bind(commandBuffer);
+					SC.M[SC.I[i].Mid]->bind(commandBuffer);
+					SC.DS[i]->bind(commandBuffer, P_Transparent, 0, currentImage);
+					vkCmdDrawIndexed(commandBuffer,
+						static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
+				}
 
 		// Draw UI icons
 		IR.populateCommandBuffer(commandBuffer, currentImage, objIds[selectedObj]);
