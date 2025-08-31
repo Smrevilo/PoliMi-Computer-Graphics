@@ -93,6 +93,46 @@ bool isKeyPressed(int key) {
 	return glfwGetKey(window, key) == GLFW_PRESS;
 }
 
+void savePlacedObjects(const std::string& filename = "placed_objects.txt") {
+	std::ofstream file(filename);
+	if (!file.is_open()) {
+		std::cerr << "Failed to open file for saving placed objects: " << filename << "\n";
+		return;
+	}
+	for (const auto& [coord, id] : placedObjects) {
+		file << id << " " << std::get<0>(coord) << " " << std::get<1>(coord) << " " << std::get<2>(coord) << "\n";
+	}
+}
+void loadPlacedObjects(const std::string& filename = "placed_objects.txt") {
+
+	placedObjects.clear();
+
+	std::ifstream file(filename);
+	std::string line;
+	while (std::getline(file, line)) {
+		std::istringstream iss(line);
+		std::string id;
+		int x, y, z;
+		if (iss >> id >> x >> y >> z) {
+			std::string baseId = id.substr(0, id.find("_spawn_"));
+			float scale = 0.2f;
+			auto sit = objectScale.find(baseId);
+			if(sit != objectScale.end()) scale = sit->second;
+			float objRot = 0.0f;
+			glm::mat4 objTr = glm::translate(glm::mat4(1), glm::vec3(x, y, z)) *
+						 glm::rotate(glm::mat4(1), objRot, glm::vec3(0,1,0)) *
+						 glm::scale(glm::mat4(1), glm::vec3(scale));
+			std::string newId = baseId + "_spawn_" + std::to_string(spawnCounter++);
+			SC.addInstance(newId, SC.MeshIds[baseId], SC.TextureIds[baseId], objTr, DSL);
+			placedObjects[{x, y, z}] = newId;
+		}
+	}
+	vkDeviceWaitIdle(device);
+	vkFreeCommandBuffers(device, commandPool,
+						static_cast<uint32_t>(commandBuffers.size()),
+						commandBuffers.data());
+	createCommandBuffers();
+}
 // Mouse callback for GLFW
 static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	ModularHospitalWardPlanner* app = reinterpret_cast<ModularHospitalWardPlanner*>(glfwGetWindowUserPointer(window));
@@ -560,6 +600,13 @@ void handleInput() {
 				debounce = false;
 				curDebounce = 0;
 			}
+		}
+				// Save/load placed objects with K/L
+		if (isKeyPressed(GLFW_KEY_K)) {
+			savePlacedObjects("placed_objects.txt");
+		}
+		if (isKeyPressed(GLFW_KEY_L)) {
+			loadPlacedObjects("placed_objects.txt");
 		}
 		if (glfwGetKey(window, GLFW_KEY_P))
 		{
