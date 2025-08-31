@@ -83,7 +83,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	glm::vec3 fpCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	float fpCameraYaw = -90.0f;
 	float fpCameraPitch = 0.0f;
-	float fpCameraSpeed = 1.0f;
+	float fpCameraSpeed = 3.0f;
 	// Mouse movement for FPV
 	double lastMouseX = 0.0, lastMouseY = 0.0;
 	double mouseDeltaX = 0.0, mouseDeltaY = 0.0;
@@ -590,7 +590,7 @@ void handleInput() {
 		glm::mat4 ViewPrj;
 		glm::mat4 Mv;
 		if (firstPersonMode) {
-			glm::mat4 proj = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 100.0f);
+			glm::mat4 proj = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 300.0f);
 			proj[1][1] *= -1;
 			Mv = glm::lookAt(fpCameraPos, fpCameraPos + fpCameraFront, fpCameraUp);
 			ViewPrj = proj * Mv;
