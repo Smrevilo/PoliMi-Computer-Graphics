@@ -96,6 +96,63 @@ bool isKeyPressed(int key) {
 	return glfwGetKey(window, key) == GLFW_PRESS;
 }
 
+void savePlacedObjects(const std::string& filename = "placed_objects.txt") {
+	std::ofstream file(filename);
+	if (!file.is_open()) {
+		std::cerr << "Failed to open file for saving placed objects: " << filename << "\n";
+		return;
+	}
+	for (const auto& [coord, id] : placedObjects) {
+		file << id << " " << std::get<0>(coord) << " " << std::get<1>(coord) << " " << std::get<2>(coord) << "\n";
+	}
+}
+void loadPlacedObjects(const std::string& filename = "placed_objects.txt") {
+	//remove all previously spawned instances to avoid duplicates
+	{
+		std::vector<std::string> toRemove;
+		toRemove.reserve(SC.InstanceCount);
+		for (int i = 0; i < SC.InstanceCount; ++i) {
+			if (SC.I[i].id && SC.I[i].id->find("_spawn_") != std::string::npos) {
+				toRemove.push_back(*SC.I[i].id);
+			}
+		}
+		if (!toRemove.empty()) {
+			vkDeviceWaitIdle(device);
+			for (const auto& rid : toRemove) {
+				SC.removeInstance(rid);
+			}
+		}
+	}
+
+	placedObjects.clear();
+
+	std::ifstream file(filename);
+	std::string line;
+	while (std::getline(file, line)) {
+		std::istringstream iss(line);
+		std::string id;
+		int x, y, z;
+		if (iss >> id >> x >> y >> z) {
+			std::cout << "Loading object id: " << id << " at position (" << x << ", " << y << ", " << z << ")\n";
+			std::string baseId = id.substr(0, id.find("_spawn_"));
+			float scale = 0.2f;
+			auto sit = objectScale.find(baseId);
+			if(sit != objectScale.end()) scale = sit->second;
+			float objRot = 0.0f;
+			glm::mat4 objTr = glm::translate(glm::mat4(1), glm::vec3(x, y, z)) *
+						 glm::rotate(glm::mat4(1), objRot, glm::vec3(0,1,0)) *
+						 glm::scale(glm::mat4(1), glm::vec3(scale));
+			std::string newId = baseId + "_spawn_" + std::to_string(spawnCounter++);
+			SC.addInstance(newId, SC.MeshIds[baseId], SC.TextureIds[baseId], objTr, DSL);
+			placedObjects[{x, y, z}] = newId;
+		}
+	}
+	vkDeviceWaitIdle(device);
+	vkFreeCommandBuffers(device, commandPool,
+						static_cast<uint32_t>(commandBuffers.size()),
+						commandBuffers.data());
+	createCommandBuffers();
+}
 // Mouse callback for GLFW
 static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	ModularHospitalWardPlanner* app = reinterpret_cast<ModularHospitalWardPlanner*>(glfwGetWindowUserPointer(window));
@@ -440,15 +497,24 @@ void handleInput() {
 				glm::vec3 placePos = Pos + forwardDir * GRID_SIZE;
 				placePos = GRID_SIZE * glm::round(placePos / GRID_SIZE);
 
-				std::cout << "Placing object at: " << placePos.x << ", " << placePos.y << ", " << placePos.z << "\n";
-
-				std::tuple<int,int,int> gkey = {placePos.x, placePos.y, placePos.z};
+				int gx = static_cast<int>(placePos.x);
+				int gy = static_cast<int>(placePos.y);
+				int gz = static_cast<int>(placePos.z);
+				std::tuple<int,int,int> gkey = {gx, gy, gz};
 
 				auto pit = placedObjects.find(gkey);
+
 				if(pit != placedObjects.end()) {
+				std::cout << "Removing object at: " << gx << ", " << gy << ", " << gz << "\n";
+
+					// Ensure GPU is idle so we don't destroy buffers still in use
+					vkDeviceWaitIdle(device);
 					SC.removeInstance(pit->second);
 					placedObjects.erase(pit);
 				} else {
+					std::cout << "No object found at (" << gx << ", " << gy << ", " << gz << ") to remove.\n";
+				std::cout << "Placing object at: " << gx << ", " << gy << ", " << gz << "\n";
+
 					std::string pId = objIds[selectedObj];
 					float scale = 0.2f;
 					auto sit = objectScale.find(pId);
@@ -591,6 +657,13 @@ void handleInput() {
 				debounce = false;
 				curDebounce = 0;
 			}
+		}
+				// Save/load placed objects with K/L
+		if (isKeyPressed(GLFW_KEY_K)) {
+			savePlacedObjects("placed_objects.txt");
+		}
+		if (isKeyPressed(GLFW_KEY_L)) {
+			loadPlacedObjects("placed_objects.txt");
 		}
 		if (glfwGetKey(window, GLFW_KEY_P))
 		{

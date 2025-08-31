@@ -3318,6 +3318,15 @@ void DescriptorSet::init(BaseProject *bp, DescriptorSetLayout *DSL,
 }
 
 void DescriptorSet::cleanup() {
+	// Free descriptor sets first, so they no longer reference the buffers
+	if(!descriptorSets.empty()) {
+		vkFreeDescriptorSets(BP->device,
+							 BP->descriptorPool,
+							 static_cast<uint32_t>(descriptorSets.size()),
+							 descriptorSets.data());
+		descriptorSets.clear();
+	}
+	// Now it's safe to destroy uniform buffers and free their memory
 	for(int j = 0; j < uniformBuffers.size(); j++) {
 		if(toFree[j]) {
 			for (size_t i = 0; i < BP->swapChainImages.size(); i++) {
@@ -3325,13 +3334,6 @@ void DescriptorSet::cleanup() {
 				vkFreeMemory(BP->device, uniformBuffersMemory[j][i], nullptr);
 			}
 		}
-	}
-	if(!descriptorSets.empty()) {
-		vkFreeDescriptorSets(BP->device,
-										BP->descriptorPool,
-										static_cast<uint32_t>(descriptorSets.size()),
-										descriptorSets.data());
-		descriptorSets.clear();
 	}
 }
 
