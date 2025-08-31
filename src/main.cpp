@@ -76,6 +76,57 @@ class ModularHospitalWardPlanner : public BaseProject {
 	int selectedObj = 0;
 	std::unordered_map<std::string, float> objectScale;
 
+	// First person view mode
+	bool firstPersonMode = false;
+	glm::vec3 fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+	glm::vec3 fpCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 fpCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	float fpCameraYaw = -90.0f;
+	float fpCameraPitch = 0.0f;
+	float fpCameraSpeed = 1.0f;
+	// Mouse movement for FPV
+	double lastMouseX = 0.0, lastMouseY = 0.0;
+	double mouseDeltaX = 0.0, mouseDeltaY = 0.0;
+	bool mouseInitialized = false;
+// Helper to check key state
+bool isKeyPressed(int key) {
+	return glfwGetKey(window, key) == GLFW_PRESS;
+}
+
+// Mouse callback for GLFW
+static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+	ModularHospitalWardPlanner* app = reinterpret_cast<ModularHospitalWardPlanner*>(glfwGetWindowUserPointer(window));
+	if (!app->mouseInitialized) {
+		app->lastMouseX = xpos;
+		app->lastMouseY = ypos;
+		app->mouseInitialized = true;
+	}
+	app->mouseDeltaX = xpos - app->lastMouseX;
+	app->mouseDeltaY = ypos - app->lastMouseY;
+	app->lastMouseX = xpos;
+	app->lastMouseY = ypos;
+}
+
+// Handle input for toggling first person mode and mouse movement
+void handleInput() {
+	static bool fKeyPrev = false;
+	bool fKeyNow = isKeyPressed(GLFW_KEY_F);
+	if (fKeyNow && !fKeyPrev) {
+		firstPersonMode = !firstPersonMode;
+		// Optionally reset camera position/orientation
+		if (firstPersonMode) {
+			fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+			fpCameraYaw = -90.0f;
+			fpCameraPitch = 0.0f;
+			mouseInitialized = false;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		} else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+	}
+	fKeyPrev = fKeyNow;
+}
+
 	// Here you set the main application parameters
 	void setWindowParameters() {
 		// window size, titile and initial background
@@ -158,29 +209,32 @@ class ModularHospitalWardPlanner : public BaseProject {
 		InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
 
 		IR.init(this,
-                     {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
-                      {"potted2", "assets/Icons/M_PottedPlant_02.png"},
-                      {"aircondition", "assets/Icons/M_Aircondition_01.png"},
-                      {"bed", "assets/Icons/M_Bed_01.png"},
-                      {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
-                      {"cabinet", "assets/Icons/M_Cabinet_01.png"},
-                      {"closestool", "assets/Icons/M_Closestool_01.png"},
-                      {"curtain", "assets/Icons/M_Curtain_01.png"},
-                      {"door1", "assets/Icons/M_Door_01.png"},
-                      {"door2", "assets/Icons/M_Door_02.png"},
-                      {"door3", "assets/Icons/M_Door_03.png"},
-                      {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
-                      {"pc", "assets/Icons/M_PC_01.png"},
-                      {"poster", "assets/Icons/M_Poster_01.png"},
-                      {"shelf", "assets/Icons/M_Shelf_01.png"},
-                      {"socket", "assets/Icons/M_Socket_01.png"},
-                      {"sofa", "assets/Icons/M_Sofa_01.png"},
-                      {"tv", "assets/Icons/M_TV_01.png"},
-                      {"top", "assets/Icons/M_Top_01.png"},
-                      {"trashcan", "assets/Icons/M_TrashCan_01.png"},
-                      {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
-                      {"window", "assets/Icons/M_Window_01.png"}},
-                     windowWidth, windowHeight);
+				 {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
+				  {"potted2", "assets/Icons/M_PottedPlant_02.png"},
+				  {"aircondition", "assets/Icons/M_Aircondition_01.png"},
+				  {"bed", "assets/Icons/M_Bed_01.png"},
+				  {"bulletinboard", "assets/Icons/M_BulletinBoard_01.png"},
+				  {"cabinet", "assets/Icons/M_Cabinet_01.png"},
+				  {"closestool", "assets/Icons/M_Closestool_01.png"},
+				  {"curtain", "assets/Icons/M_Curtain_01.png"},
+				  {"door1", "assets/Icons/M_Door_01.png"},
+				  {"door2", "assets/Icons/M_Door_02.png"},
+				  {"door3", "assets/Icons/M_Door_03.png"},
+				  {"nursesstation", "assets/Icons/M_NursesStation_01.png"},
+				  {"pc", "assets/Icons/M_PC_01.png"},
+				  {"poster", "assets/Icons/M_Poster_01.png"},
+				  {"shelf", "assets/Icons/M_Shelf_01.png"},
+				  {"socket", "assets/Icons/M_Socket_01.png"},
+				  {"sofa", "assets/Icons/M_Sofa_01.png"},
+				  {"tv", "assets/Icons/M_TV_01.png"},
+				  {"top", "assets/Icons/M_Top_01.png"},
+				  {"trashcan", "assets/Icons/M_TrashCan_01.png"},
+				  {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
+				  {"window", "assets/Icons/M_Window_01.png"}},
+				 windowWidth, windowHeight);
+		// Set mouse callback
+		glfwSetWindowUserPointer(window, this);
+		glfwSetCursorPosCallback(window, mouseCallback);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -272,54 +326,83 @@ class ModularHospitalWardPlanner : public BaseProject {
 		static int subpass = 0;
 		static float subpassTimer = 0.0f;
 
-		lookAng -= r.y * ROT_SPEED * deltaT;
-		lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
-		DlookAng = lookAng;
-
-		// Discrete movement using WASD + shift + ctrl keys
-		static bool wKey = false, aKey = false, sKey = false, dKey = false, shift = false, ctrl = false;
+		// First person mode input and camera update
 		constexpr float GRID_SIZE = 2.0f;
-		float snappedAngMove = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
-		glm::vec3 forwardDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
-		glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
-		glm::vec3 upDir = glm::vec3(glm::rotate(glm::mat4(1), snappedAngMove, glm::vec3(0,1,0)) * glm::vec4(0, 1.0f, 0, 0));
+		float forwardAngle = 0.0f;
+		glm::vec3 forwardDir(0.0f);
+		if (!firstPersonMode) {
+			lookAng -= r.y * ROT_SPEED * deltaT;
+			lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
+			DlookAng = lookAng;
+			forwardAngle = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
+			forwardDir = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
+			glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
+			glm::vec3 upDir = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(0, 1.0f, 0, 0));
 
-		static float movementTimer = 0.0f;
-		static glm::vec3 prevMoveDir = glm::vec3(0.0f);
-		const float MOVEMENT_DIFF = 0.1f; //time between movements
-		//lambda function to handle movement, given pressed key and direction
-		auto stepMove = [&](const glm::vec3 &dir) {
-			if(glm::length(dir) > 0.0f) {
-				movementTimer = MOVEMENT_DIFF;
-				glm::vec3 newPos = Pos + dir * GRID_SIZE;
-				newPos = glm::vec3(
-					GRID_SIZE * std::round(newPos.x / GRID_SIZE),
-					std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
-					GRID_SIZE * std::round(newPos.z / GRID_SIZE)
-				);
-				Pos = newPos;
-			}
-		};
-		movementTimer -= deltaT;
-		if(movementTimer < 0.0f) movementTimer = 0.0f;
+			static float movementTimer = 0.0f;
+			static glm::vec3 prevMoveDir = glm::vec3(0.0f);
+			const float MOVEMENT_DIFF = 0.1f; //time between movements
+			//lambda function to handle movement, given pressed key and direction
+			auto stepMove = [&](const glm::vec3 &dir) {
+				if(glm::length(dir) > 0.0f) {
+					movementTimer = MOVEMENT_DIFF;
+					glm::vec3 newPos = Pos + dir * GRID_SIZE;
+					newPos = glm::vec3(
+						GRID_SIZE * std::round(newPos.x / GRID_SIZE),
+						std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
+						GRID_SIZE * std::round(newPos.z / GRID_SIZE)
+					);
+					Pos = newPos;
+				}
+			};
+			movementTimer -= deltaT;
+			if(movementTimer < 0.0f) movementTimer = 0.0f;
 
-		// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
-		if(glm::length(m) > 0.0f) {
-			if(movementTimer <= 0.0f || m != prevMoveDir) {
-				stepMove(m);
+			// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
+			if(glm::length(m) > 0.0f) {
+				if(movementTimer <= 0.0f || m != prevMoveDir) {
+					stepMove(m);
+				}
 			}
+			prevMoveDir = m;
+
+			// Update object position so it matches the placement logic
+			glm::vec3 objectPos = Pos + forwardDir * GRID_SIZE;
+
+			// Update object rotation
+			float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
+			SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+		} else {
+			// WASD movement
+			glm::vec3 moveDir(0.0f);
+			if (isKeyPressed(GLFW_KEY_W)) moveDir += fpCameraFront;
+			if (isKeyPressed(GLFW_KEY_S)) moveDir -= fpCameraFront;
+			if (isKeyPressed(GLFW_KEY_A)) moveDir -= glm::normalize(glm::cross(fpCameraFront, fpCameraUp));
+			if (isKeyPressed(GLFW_KEY_D)) moveDir += glm::normalize(glm::cross(fpCameraFront, fpCameraUp));
+			if (glm::length(moveDir) > 0.0f)
+				fpCameraPos += fpCameraSpeed * glm::normalize(moveDir) * deltaT * 10.0f;
+
+			// Mouse look: update yaw/pitch from mouse deltas
+			const float mouseSensitivity = 0.1f;
+			fpCameraYaw += mouseDeltaX * mouseSensitivity;
+			fpCameraPitch -= mouseDeltaY * mouseSensitivity;
+			// Clamp pitch
+			if (fpCameraPitch > 89.0f) fpCameraPitch = 89.0f;
+			if (fpCameraPitch < -89.0f) fpCameraPitch = -89.0f;
+			// Update fpCameraFront from yaw/pitch
+			float yawRad = glm::radians(fpCameraYaw);
+			float pitchRad = glm::radians(fpCameraPitch);
+			fpCameraFront.x = cos(pitchRad) * cos(yawRad);
+			fpCameraFront.y = sin(pitchRad);
+			fpCameraFront.z = cos(pitchRad) * sin(yawRad);
+			fpCameraFront = glm::normalize(fpCameraFront);
+			// Reset mouse deltas after use
+			mouseDeltaX = 0.0;
+			mouseDeltaY = 0.0;
 		}
-		prevMoveDir = m;
-
-		// Update object position so it matches the placement logic
-		glm::vec3 objectPos = Pos + forwardDir * GRID_SIZE;
-
-		// Update object rotation
-		float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
-		SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
 
 		if(glfwGetKey(window, GLFW_KEY_SPACE)) {
-			if(!debounce) {
+			if(!debounce && !firstPersonMode) {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
 
@@ -455,6 +538,29 @@ class ModularHospitalWardPlanner : public BaseProject {
 			}
 		}
 
+		if (glfwGetKey(window, GLFW_KEY_C))
+		{
+
+			firstPersonMode = !firstPersonMode;
+			// Optionally reset camera position/orientation
+			if (firstPersonMode) {
+				fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+				fpCameraYaw = -90.0f;
+				fpCameraPitch = 0.0f;
+				mouseInitialized = false;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			} else {
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+		}
+		else
+		{
+			if ((curDebounce == GLFW_KEY_C) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
 		if (glfwGetKey(window, GLFW_KEY_P))
 		{
 			if (!debounce)
@@ -478,53 +584,41 @@ class ModularHospitalWardPlanner : public BaseProject {
 		}
 
 
-		//perspective projection matrix with 60° FOV, aspect ratio Ar, near plane 0.1f, far plane 500.0f
-		glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
-		
-		//flip y axis for vulkan coordinate system
-		M[1][1] *= -1;
-
-		//set camera offset
-		glm::vec3 cameraOffset = glm::vec3(-35.0f, 70.0f, 35.0f);
-		cameraOffset = cameraOffset * glm::mat3(0.8f); //quick way for modifying camera distance
-		glm::vec3 cameraPos = Pos * glm::vec3(1.0f, 0.0f, 1.0f) + cameraOffset;
-
-		//create view matrix looking from camerapos to pos, with up direction 0,1,0
-		glm::mat4 Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
-
-		//combine projection and view matrices for rendering
-		glm::mat4 ViewPrj =  M * Mv;
 		UniformBufferObject ubo{};
-		glm::mat4 baseTr = glm::mat4(1.0f);
-
-		// updates global uniforms with light and eye positions
 		GlobalUniformBufferObject gubo{};
+		glm::mat4 baseTr = glm::mat4(1.0f);
+		glm::mat4 ViewPrj;
+		glm::mat4 Mv;
+		if (firstPersonMode) {
+			glm::mat4 proj = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 100.0f);
+			proj[1][1] *= -1;
+			Mv = glm::lookAt(fpCameraPos, fpCameraPos + fpCameraFront, fpCameraUp);
+			ViewPrj = proj * Mv;
+			gubo.eyePos = fpCameraPos;
+		} else {
+			glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
+			M[1][1] *= -1;
+			glm::vec3 cameraOffset = glm::vec3(-35.0f, 70.0f, 35.0f);
+			cameraOffset = cameraOffset * glm::mat3(0.8f);
+			glm::vec3 cameraPos = Pos * glm::vec3(1.0f, 0.0f, 1.0f) + cameraOffset;
+			Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
+			ViewPrj = M * Mv;
+			gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
+		}
 		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
 		gubo.eyeDir = glm::vec4(0);
 
-		// updates all the instance uniform buffers
 		for(int i = 0; i < SC.InstanceCount; i++) {
 			ubo.mMat = SC.I[i].Wm * baseTr;
 			ubo.mvpMat = ViewPrj * ubo.mMat;
 			ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-
 			SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
 			SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
-
-		// mMat is a member of the UniformBufferObject struct: 
-		// it holds the model matrix, which transforms an object's local coordinates to world coordinates
-		// the object being positioned is at the origin and needs no model matrix
 		ubo.mMat = baseTr;
 		ubo.mvpMat = ViewPrj * ubo.mMat;
-		//normal matrix: used to transform normals for lighting
 		ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-		//DS1: descriptor set for the first object
-		//.map: maps the uniform buffer object and global uniform buffer object to the descriptor set
-		//		(eventually) uploading the data to the GPU
-		//currentimage: index of the swapchain image being rendered
 		DS1.map(currentImage, &ubo, sizeof(ubo), 0);
 		DS1.map(currentImage, &gubo, sizeof(gubo), 2);
 	}
