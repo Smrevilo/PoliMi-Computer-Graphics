@@ -637,17 +637,21 @@ void handleInput() {
 
 		if (glfwGetKey(window, GLFW_KEY_C))
 		{
-
-			firstPersonMode = !firstPersonMode;
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_C;
+				firstPersonMode = !firstPersonMode;
 			// Optionally reset camera position/orientation
-			if (firstPersonMode) {
+				if (firstPersonMode) {
 				fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
-				fpCameraYaw = -90.0f;
-				fpCameraPitch = 0.0f;
-				mouseInitialized = false;
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			} else {
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+					fpCameraYaw = -90.0f;
+					fpCameraPitch = 0.0f;
+					mouseInitialized = false;
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				} else {
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				}
 			}
 		}
 		else
@@ -658,12 +662,30 @@ void handleInput() {
 				curDebounce = 0;
 			}
 		}
-				// Save/load placed objects with K/L
-		if (isKeyPressed(GLFW_KEY_K)) {
-			savePlacedObjects("placed_objects.txt");
+				// Save/load placed objects with K/L (debounced)
+		if (glfwGetKey(window, GLFW_KEY_K)) {
+			if (!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_K;
+				savePlacedObjects("placed_objects.txt");
+			}
+		} else {
+			if ((curDebounce == GLFW_KEY_K) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
 		}
-		if (isKeyPressed(GLFW_KEY_L)) {
-			loadPlacedObjects("placed_objects.txt");
+		if (glfwGetKey(window, GLFW_KEY_L)) {
+			if (!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_L;
+				loadPlacedObjects("placed_objects.txt");
+			}
+		} else {
+			if ((curDebounce == GLFW_KEY_L) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
 		}
 		if (glfwGetKey(window, GLFW_KEY_P))
 		{
