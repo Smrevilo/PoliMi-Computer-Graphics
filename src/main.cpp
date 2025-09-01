@@ -234,11 +234,11 @@ void handleInput() {
 				});
 
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
+		P.init(this, &VD, "shaders/SimpleVert.spv", "shaders/SimpleFrag.spv", {&DSL});
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_NONE, false);
 		
-		P_Transparent.init(this, &VD, "shaders/PhongVert.spv", "shaders/TransparentFrag.spv", {&DSL});
+		P_Transparent.init(this, &VD, "shaders/SimpleVert.spv", "shaders/TransparentFrag.spv", {&DSL});
 		P_Transparent.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_BACK_BIT, true);  // back face culling + true enables blending for transparency
 
