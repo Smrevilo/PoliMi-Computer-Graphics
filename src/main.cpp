@@ -74,7 +74,6 @@ class ModularHospitalWardPlanner : public BaseProject {
 	std::vector<std::string> objIds;
 	int selectedObj = 0;
 	std::unordered_map<std::string, float> objectScale;
-	std::unordered_set<std::string> transparentObjects;
 
 	// First person view mode
 	bool firstPersonMode = false;
@@ -322,13 +321,11 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		P.bind(commandBuffer);
 		DS1.bind(commandBuffer, P, 0, currentImage);
 		// Ensure the preview object (id == "obj") is always transparent
-		transparentObjects.insert("obj");
 
 		// draw not transparent objects
 		for(int i = 0; i < SC.InstanceCount; i++) {
 			std::string instanceId = *SC.I[i].id;
-			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
-			if(shouldBeTransparent) continue;
+			if(instanceId == "obj") continue;
 			P.bind(commandBuffer);
 			SC.M[SC.I[i].Mid]->bind(commandBuffer);
 			SC.DS[i]->bind(commandBuffer, P, 0, currentImage);
@@ -336,17 +333,13 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
 		}
 
-		// draw transparent objects
-		for(int i = 0; i < SC.InstanceCount; i++) {
-			std::string instanceId = *SC.I[i].id;
-			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
-			if(!shouldBeTransparent) continue;
-			P_Transparent.bind(commandBuffer);
-			SC.M[SC.I[i].Mid]->bind(commandBuffer);
-			SC.DS[i]->bind(commandBuffer, P_Transparent, 0, currentImage);
-			vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
-		}
+		// draw transparent object
+		int objIdx = SC.InstanceIds["obj"];
+		P_Transparent.bind(commandBuffer);
+		SC.M[SC.I[objIdx].Mid]->bind(commandBuffer);
+		SC.DS[objIdx]->bind(commandBuffer, P_Transparent, 0, currentImage);
+		vkCmdDrawIndexed(commandBuffer,
+					static_cast<uint32_t>(SC.M[SC.I[objIdx].Mid]->indices.size()), 1, 0, 0, 0);
 
 		// Draw UI icons
 		IR.populateCommandBuffer(commandBuffer, currentImage, objIds[selectedObj]);
