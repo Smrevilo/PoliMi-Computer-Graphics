@@ -566,24 +566,16 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		static std::string lastRedBaseId;
 		std::string currentId = placedObjects[{Pos.x, Pos.y, Pos.z}];
 		std::string currentBaseId;
-		if (!currentId.empty()) {
-			size_t spawnPos = currentId.find("_spawn_");
-			if (spawnPos != std::string::npos)
-				currentBaseId = currentId.substr(0, spawnPos);
-			else
-				currentBaseId = currentId;
-		}
 		if (!currentId.empty() && (!placedRedTexture || lastRedId != currentId)) {
-			// Restore previous red object if needed
-			if (placedRedTexture && !lastRedId.empty() && lastRedId != currentId) {
-				if (!lastRedBaseId.empty()) {
-					SC.updateInstance(lastRedId, SC.MeshIds[lastRedBaseId], SC.TextureIds[lastRedBaseId], DSL);
-				}
+			//retrieving the base id of the object 
+			size_t spawnPos = currentId.find("_spawn_");
+			currentBaseId = currentId.substr(0, spawnPos);
+			// Change previous red object to normal
+			if (placedRedTexture && lastRedId != currentId) {
+				SC.updateInstance(lastRedId, SC.MeshIds[lastRedBaseId], SC.TextureIds[lastRedBaseId], DSL);
 			}
 			// Set current object's texture to red
-			if (!currentBaseId.empty()) {
-				SC.updateInstance(currentId, SC.MeshIds[currentBaseId], SC.TextureIds["red"], DSL);
-			}
+			SC.updateInstance(currentId, SC.MeshIds[currentBaseId], SC.TextureIds["red"], DSL);
 			placedRedTexture = true;
 			lastRedId = currentId;
 			lastRedBaseId = currentBaseId;
@@ -592,14 +584,10 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 										static_cast<uint32_t>(commandBuffers.size()),
 										commandBuffers.data());
 			createCommandBuffers();
-		} else if (currentId.empty() && placedRedTexture && !lastRedId.empty()) {
-			// Restore previous object's texture
-			if (!lastRedBaseId.empty()) {
-				SC.updateInstance(lastRedId, SC.MeshIds[lastRedBaseId], SC.TextureIds[lastRedBaseId], DSL);
-			}
+		} else if (currentId.empty() && placedRedTexture) {
+			// Restore previous object texture
+			SC.updateInstance(lastRedId, SC.MeshIds[lastRedBaseId], SC.TextureIds[lastRedBaseId], DSL);
 			placedRedTexture = false;
-			lastRedId.clear();
-			lastRedBaseId.clear();
 			vkDeviceWaitIdle(device);
 			vkFreeCommandBuffers(device, commandPool,
 									static_cast<uint32_t>(commandBuffers.size()),
