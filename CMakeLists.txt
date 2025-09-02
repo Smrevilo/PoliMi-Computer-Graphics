@@ -145,14 +145,42 @@ elseif(UNIX AND NOT APPLE)
     target_include_directories(${PROJECT_NAME} PRIVATE ${GLM_INCLUDE_DIRS})
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan glfw)
+
+    # Dear ImGui (FetchContent)
+    include(FetchContent)
+    set(IMGUI_TAG v1.91.0)
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG ${IMGUI_TAG}
+    )
+    FetchContent_MakeAvailable(imgui)
+
+    # ImGui sources (core + backends)
+    set(IMGUI_DIR ${imgui_SOURCE_DIR})
+    set(IMGUI_BACKENDS ${IMGUI_DIR}/backends)
+    set(IMGUI_SOURCES
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_BACKENDS}/imgui_impl_glfw.cpp
+        ${IMGUI_BACKENDS}/imgui_impl_vulkan.cpp
+    )
+
+    add_library(imgui_static STATIC ${IMGUI_SOURCES})
+    target_include_directories(imgui_static PUBLIC ${IMGUI_DIR} ${IMGUI_BACKENDS})
+    target_link_libraries(imgui_static PUBLIC Vulkan::Vulkan glfw)
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE imgui_static)
 
     foreach(dir IN LISTS Vulkan_INCLUDE_DIR INCLUDE_DIRS)
         target_include_directories(${PROJECT_NAME} PUBLIC ${dir})
     endforeach()
 
     foreach(lib IN LISTS Vulkan_LIBRARIES LINK_LIBS)
-        target_link_libraries(${PROJECT_NAME} ${lib})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${lib})
     endforeach()
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -35,6 +35,10 @@ struct Vertex {
 };
 
 #include "modules/Scene.hpp"
+#include "modules/ImGuiLayer.hpp"
+#include <imgui.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 struct GridCoordHash {
 	size_t operator()(const std::tuple<int,int,int>& p) const noexcept {
@@ -64,6 +68,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 
 	Scene SC;
 	IconMaker IR;
+	ImGuiLayer GUI;
 
 	// Other application parameters
 	float Ar;
@@ -299,6 +304,19 @@ void handleInput() {
 		// Set mouse callback
 		glfwSetWindowUserPointer(window, this);
 		glfwSetCursorPosCallback(window, mouseCallback);
+
+	// Init ImGui layer
+	ImGuiLayer::InitOptions opts{};
+	opts.window = window;
+	opts.instance = instance;
+	opts.physicalDevice = physicalDevice;
+	opts.device = device;
+	opts.queueFamilyIndex = findQueueFamilies(physicalDevice).graphicsFamily.value();
+	opts.graphicsQueue = graphicsQueue;
+	opts.renderPass = renderPass;
+	opts.imageCount = (uint32_t)swapChainImages.size();
+	opts.msaaSamples = msaaSamples;
+	GUI.init(opts);
 	}
 
 	// Here you create your pipelines and Descriptor Sets!
@@ -331,6 +349,7 @@ void handleInput() {
 
 		SC.pipelinesAndDescriptorSetsCleanup();
 		IR.pipelinesAndDescriptorSetsCleanup();
+	// ImGui has no per-pipeline resources here
 	}
 
 	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -348,6 +367,7 @@ void handleInput() {
 
 		SC.localCleanup();
 		IR.localCleanup();
+	GUI.cleanup();
 	}
 
 	// Here it is the creation of the command buffer:
@@ -391,6 +411,64 @@ void handleInput() {
 
 		// Draw UI icons
 		IR.populateCommandBuffer(commandBuffer, currentImage, objIds[selectedObj]);
+	}
+
+	// GUI hooks
+	void beginGUI() override {
+		GUI.newFrame();
+		if (ImGui::BeginMainMenuBar()) {
+			if (ImGui::BeginMenu("File")) {
+				if (ImGui::MenuItem("Save Objects", "K")) {
+					savePlacedObjects("placed_objects.txt");
+				}
+				if (ImGui::MenuItem("Load Objects", "L")) {
+					loadPlacedObjects("placed_objects.txt");
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("View")) {
+				bool fp = firstPersonMode;
+				if (ImGui::MenuItem("First Person", nullptr, fp)) {
+					firstPersonMode = !firstPersonMode;
+					if (firstPersonMode) {
+						fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+						fpCameraYaw = -90.0f;
+						fpCameraPitch = 0.0f;
+						mouseInitialized = false;
+						glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					} else {
+						glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+					}
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Objects")) {
+				// Object selection combo
+				static int selected = selectedObj;
+				if (ImGui::BeginCombo("Select", objIds[selectedObj].c_str())) {
+					for (int n = 0; n < (int)objIds.size(); n++) {
+						bool is_selected = (selectedObj == n);
+						if (ImGui::Selectable(objIds[n].c_str(), is_selected)) {
+							selectedObj = n;
+							InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+							SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
+											  SC.TextureIds[objIds[selectedObj]], DSL);
+							vkDeviceWaitIdle(device);
+							vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+							createCommandBuffers();
+						}
+						if (is_selected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMainMenuBar();
+		}
+	}
+
+	void renderGUI(VkCommandBuffer commandBuffer, int /*imageIndex*/) override {
+		GUI.renderDrawData(commandBuffer);
 	}
 
 	// Here is where you update the uniforms.

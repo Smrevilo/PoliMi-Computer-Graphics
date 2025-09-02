@@ -357,6 +357,7 @@ class BaseProject {
 	friend class Pipeline;
 	friend class DescriptorSetLayout;
 	friend class DescriptorSet;
+	friend class ImGuiLayer;
 public:
 	virtual void setWindowParameters() = 0;
     void run() {
@@ -1130,14 +1131,15 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		}
 	}
 
-    void createCommandPool() {
+	void createCommandPool() {
     	QueueFamilyIndices queueFamilyIndices = 
     			findQueueFamilies(physicalDevice);
     			
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-		poolInfo.flags = 0; // Optional
+	// Allow individual command buffer reset so we can record per-frame (for GUI like ImGui)
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		
 		VkResult result = vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
 		if (result != VK_SUCCESS) {
@@ -1627,7 +1629,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
         vkDeviceWaitIdle(device);
     }
     
-    void drawFrame() {
+	void drawFrame() {
 		vkWaitForFences(device, 1, &inFlightFences[currentFrame],
 						VK_TRUE, UINT64_MAX);
 		
@@ -1650,6 +1652,45 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 		
 		updateUniformBuffer(imageIndex);
+
+		// Optional per-frame GUI build hook (e.g., ImGui new frame + widgets)
+		beginGUI();
+
+		// Re-record command buffer for this frame (needed for dynamic UI)
+		vkResetCommandBuffer(commandBuffers[imageIndex], 0);
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
+			throw std::runtime_error("failed to begin recording command buffer!");
+		}
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = renderPass;
+		renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = swapChainExtent;
+
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = initialBackgroundColor;
+		clearValues[1].depthStencil = {1.0f, 0};
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
+
+		vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		// Record scene + app content
+		populateCommandBuffer(commandBuffers[imageIndex], imageIndex);
+
+		// Optional per-frame GUI render hook (e.g., ImGui render draw data)
+		renderGUI(commandBuffers[imageIndex], imageIndex);
+
+		vkCmdEndRenderPass(commandBuffers[imageIndex]);
+
+		if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+			throw std::runtime_error("failed to record command buffer!");
+		}
 		
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1659,8 +1700,8 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
 		VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
@@ -1697,6 +1738,10 @@ std::cout << "Starting createInstance()\n"  << std::flush;
     }
 
 	virtual void updateUniformBuffer(uint32_t currentImage) = 0;
+
+	// GUI hooks (default no-op). Derived apps can override to integrate a GUI framework.
+	virtual void beginGUI() {}
+	virtual void renderGUI(VkCommandBuffer /*commandBuffer*/, int /*imageIndex*/) {}
 
 	virtual void pipelinesAndDescriptorSetsCleanup() = 0;
 	virtual void localCleanup() = 0;
