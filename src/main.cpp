@@ -337,13 +337,11 @@ void handleInput() {
 	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
 	// You also have to destroy the pipelines: since they need to be rebuilt, they have two different
 	// methods: .cleanup() recreates them, while .destroy() delete them completely
-	void localCleanup() {
-		// Cleanup descriptor set layouts
-		DSL.cleanup();
+    void localCleanup() {
+       P.destroy();
+	    P_Transparent.destroy();
 
-		// Destroies pipelines
-		P.destroy();
-		P_Transparent.destroy();
+		DSL.cleanup();
 
 		// Cleanup models
 		M1.cleanup();
@@ -454,8 +452,7 @@ void handleInput() {
 			}
 			prevMoveDir = m;
 
-			// Update object position so it matches the placement logic
-			glm::vec3 objectPos = Pos + forwardDir * GRID_SIZE;
+			glm::vec3 objectPos = Pos;
 
 			// Update object rotation
 			float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
@@ -494,26 +491,18 @@ void handleInput() {
 				debounce = true;
 				curDebounce = GLFW_KEY_SPACE;
 
-				glm::vec3 placePos = Pos + forwardDir * GRID_SIZE;
-				placePos = GRID_SIZE * glm::round(placePos / GRID_SIZE);
+				std::tuple<int,int,int> posKey = {static_cast<int>(Pos.x), static_cast<int>(Pos.y), static_cast<int>(Pos.z)};
 
-				int gx = static_cast<int>(placePos.x);
-				int gy = static_cast<int>(placePos.y);
-				int gz = static_cast<int>(placePos.z);
-				std::tuple<int,int,int> gkey = {gx, gy, gz};
-
-				auto pit = placedObjects.find(gkey);
-
-				if(pit != placedObjects.end()) {
-				std::cout << "Removing object at: " << gx << ", " << gy << ", " << gz << "\n";
+				if(!placedObjects[posKey].empty()) {
+					std::cout << "Removing object at: " << Pos.x << ", " << Pos.y << ", " << Pos.z << "\n";
 
 					// Ensure GPU is idle so we don't destroy buffers still in use
 					vkDeviceWaitIdle(device);
-					SC.removeInstance(pit->second);
-					placedObjects.erase(pit);
+					SC.removeInstance(placedObjects[posKey]);
+					placedObjects.erase(posKey);
 				} else {
-					std::cout << "No object found at (" << gx << ", " << gy << ", " << gz << ") to remove.\n";
-				std::cout << "Placing object at: " << gx << ", " << gy << ", " << gz << "\n";
+					
+					std::cout << "Placing object at: " << Pos.x << ", " << Pos.y << ", " << Pos.z << "\n";
 
 					std::string pId = objIds[selectedObj];
 					float scale = 0.2f;
@@ -522,12 +511,12 @@ void handleInput() {
 
 					float objRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 
-					glm::mat4 objTr = glm::translate(glm::mat4(1), placePos) *
+					glm::mat4 objTr = glm::translate(glm::mat4(1), Pos) *
 										   glm::rotate(glm::mat4(1), objRot, glm::vec3(0,1,0)) *
 										   glm::scale(glm::mat4(1), glm::vec3(scale));
 					std::string id = pId + "_spawn_" + std::to_string(spawnCounter++);
 					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], objTr, DSL);
-					placedObjects[gkey] = id;
+					placedObjects[posKey] = id;
 				}
 				// Re-record command buffers so the new instance
 				// is included in the rendering pipeline
@@ -634,6 +623,54 @@ void handleInput() {
 				curDebounce = 0;
 			}
 		}
+		
+		// If the preview position is occupied, change the placed object's texture to red
+		static bool placedRedTexture = false;
+		static std::string lastRedId;
+		static std::string lastRedBaseId;
+		std::string currentId = placedObjects[{Pos.x, Pos.y, Pos.z}];
+		std::string currentBaseId;
+		if (!currentId.empty()) {
+			size_t spawnPos = currentId.find("_spawn_");
+			if (spawnPos != std::string::npos)
+				currentBaseId = currentId.substr(0, spawnPos);
+			else
+				currentBaseId = currentId;
+		}
+		if (!currentId.empty() && (!placedRedTexture || lastRedId != currentId)) {
+			// Restore previous red object if needed
+			if (placedRedTexture && !lastRedId.empty() && lastRedId != currentId) {
+				if (!lastRedBaseId.empty()) {
+					SC.updateInstance(lastRedId, SC.MeshIds[lastRedBaseId], SC.TextureIds[lastRedBaseId], DSL);
+				}
+			}
+			// Set current object's texture to red
+			if (!currentBaseId.empty()) {
+				SC.updateInstance(currentId, SC.MeshIds[currentBaseId], SC.TextureIds["red"], DSL);
+			}
+			placedRedTexture = true;
+			lastRedId = currentId;
+			lastRedBaseId = currentBaseId;
+			vkDeviceWaitIdle(device);
+			vkFreeCommandBuffers(device, commandPool,
+										static_cast<uint32_t>(commandBuffers.size()),
+										commandBuffers.data());
+			createCommandBuffers();
+		} else if (currentId.empty() && placedRedTexture && !lastRedId.empty()) {
+			// Restore previous object's texture
+			if (!lastRedBaseId.empty()) {
+				SC.updateInstance(lastRedId, SC.MeshIds[lastRedBaseId], SC.TextureIds[lastRedBaseId], DSL);
+			}
+			placedRedTexture = false;
+			lastRedId.clear();
+			lastRedBaseId.clear();
+			vkDeviceWaitIdle(device);
+			vkFreeCommandBuffers(device, commandPool,
+									static_cast<uint32_t>(commandBuffers.size()),
+									commandBuffers.data());
+			createCommandBuffers();
+		}
+	
 
 		if (glfwGetKey(window, GLFW_KEY_C))
 		{

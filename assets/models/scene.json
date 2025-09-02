@@ -58,7 +58,8 @@
 		{"id": "top", "texture": "assets/textures/T_Top_01.PNG"},
 		{"id": "trashcan", "texture": "assets/textures/T_TrashCan_01.PNG"},
 		{"id": "wardrobe", "texture": "assets/textures/T_Wardrobe_01.PNG"},
-		{"id": "window", "texture": "assets/textures/T_Window_01.PNG"}
+		{"id": "window", "texture": "assets/textures/T_Window_01.PNG"},
+		{"id": "red", "texture": "assets/textures/Solid_red.png"}
 	],
 
 	"instances": [
@@ -75,10 +76,10 @@
 				0, 0, 0, 1]
 		},
 		{"id": "wall",   "model": "wall",   "texture": "wall",
-			"transform": [0.1, 0, 0, 0,
-				0, 0.1, 0, 0,
-				0, 0, 0.1, 0,
-				0, 0, 0, 1]
+			"transform": [	0.1, 0, 0, 0,
+							0, 0.1, 0, 0,
+							0, 0, 0.1, 0,
+							0, 0, 0, 1 ]	
 		},
 		{
 			"id": "axis",   "model": "axis",   "texture": "t0",
