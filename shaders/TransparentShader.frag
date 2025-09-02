@@ -28,7 +28,7 @@ void main() {
 	
 	vec3 Albedo = texture(texSampler, fragTexCoord).rgb;
 	vec3 Diffuse = Albedo * max(dot(Norm, -gubo.lightDir),0.0f);
-	vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(gubo.lightDir, Norm)),0.0f), 160.0f));
+	vec3 Specular = vec3(pow(max(dot(EyeDir.xyz, -reflect(gubo.lightDir, Norm)),0.0f), 160.0f));
 
 	// A special type of non-uniform ambient color, invented for this course
 	const vec3 cxp = vec3(1.0,0.5,0.5) * 0.2;

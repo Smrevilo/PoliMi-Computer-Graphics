@@ -21,7 +21,6 @@ struct GlobalUniformBufferObject {
 	alignas(16) glm::vec3 lightDir;
 	alignas(16) glm::vec4 lightColor;
 	alignas(16) glm::vec3 eyePos;
-	alignas(16) glm::vec4 eyeDir;
 };
 
 
@@ -36,6 +35,7 @@ struct Vertex {
 
 #include "modules/Scene.hpp"
 
+// Hash function for grid coordinates
 struct GridCoordHash {
 	size_t operator()(const std::tuple<int,int,int>& p) const noexcept {
 		return std::hash<int>()(std::get<0>(p)) ^ (std::hash<int>()(std::get<1>(p)) << 1) ^ (std::hash<int>()(std::get<2>(p)) << 2);
@@ -56,9 +56,7 @@ class ModularHospitalWardPlanner : public BaseProject {
 	// Pipelines [Shader couples]
 	Pipeline P;
 	Pipeline P_Transparent;
-
-	// Models
-	Model<Vertex> M1;
+	
 	// Descriptor sets
 	DescriptorSet DS1;
 
@@ -66,14 +64,13 @@ class ModularHospitalWardPlanner : public BaseProject {
 	IconMaker IR;
 
 	// Other application parameters
-	float Ar;
-	glm::vec3 Pos;
-	glm::vec3 InitialPos;
-	glm::vec3 InitialScale;
+	float Ar;	//aspect ratio
+	glm::vec3 Pos;			//current object pos
+	glm::vec3 InitialScale;	//initial object scale
 	float objectRotation = 0.0f;
 
-	std::unordered_map<std::tuple<int,int,int>, std::string, GridCoordHash> placedObjects;
-	int spawnCounter = 0;
+	std::unordered_map<std::tuple<int,int,int>, std::string, GridCoordHash> placedObjects; //placed objects map
+	int spawnCounter = 0;	//used for iding objects
 	std::vector<std::string> objIds;
 	int selectedObj = 0;
 	std::unordered_map<std::string, float> objectScale;
@@ -167,32 +164,12 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	app->lastMouseY = ypos;
 }
 
-// Handle input for toggling first person mode and mouse movement
-void handleInput() {
-	static bool fKeyPrev = false;
-	bool fKeyNow = isKeyPressed(GLFW_KEY_F);
-	if (fKeyNow && !fKeyPrev) {
-		firstPersonMode = !firstPersonMode;
-		// Optionally reset camera position/orientation
-		if (firstPersonMode) {
-			fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
-			fpCameraYaw = -90.0f;
-			fpCameraPitch = 0.0f;
-			mouseInitialized = false;
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		} else {
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
-	}
-	fKeyPrev = fKeyNow;
-}
-
 	// Here you set the main application parameters
 	void setWindowParameters() {
 		// window size, titile and initial background
 		windowWidth = 800;
 		windowHeight = 600;
-                windowTitle = "Modular Hospital Ward Planner";
+        windowTitle = "Modular Hospital Ward Planner";
     	windowResizable = GLFW_TRUE;
 		initialBackgroundColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -242,21 +219,11 @@ void handleInput() {
 		P_Transparent.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_BACK_BIT, true);  // back face culling + true enables blending for transparency
 
-		// Models, textures and Descriptors (values assigned to the uniforms)
-		M1.vertices = {{{-100.0,0.0f,-100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}},
-					   {{-100.0,0.0f, 100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}},
-					   {{ 100.0,0.0f,-100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}},
-					   {{ 100.0,0.0f, 100.0}, {0.45f,0.1f}, {0.0f,1.0f,0.0f}}};
-		M1.indices = {0, 0, 0,    0, 0, 0};
-		M1.initMesh(this, &VD);
-
-
 		// Load Scene
 		SC.init(this, &VD, DSL, P, "assets/models/scene.json");
 
 		// Init local variables
 		Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
-		InitialPos = Pos;
 		objIds = {"potted1", "potted2",
 
                              "aircondition", "bed", "bulletinboard", "cabinet",
@@ -343,9 +310,6 @@ void handleInput() {
 
 		DSL.cleanup();
 
-		// Cleanup models
-		M1.cleanup();
-
 		SC.localCleanup();
 		IR.localCleanup();
 	}
@@ -355,39 +319,34 @@ void handleInput() {
 	// with their buffers and textures
 
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-		// Draw M1 model (floor/ground) - always use filled pipeline
 		P.bind(commandBuffer);
 		DS1.bind(commandBuffer, P, 0, currentImage);
-		M1.bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
+		// Ensure the preview object (id == "obj") is always transparent
+		transparentObjects.insert("obj");
 
-				// Ensure the preview object (id == "obj") is always transparent
-				transparentObjects.insert("obj");
+		// draw not transparent objects
+		for(int i = 0; i < SC.InstanceCount; i++) {
+			std::string instanceId = *SC.I[i].id;
+			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
+			if(shouldBeTransparent) continue;
+			P.bind(commandBuffer);
+			SC.M[SC.I[i].Mid]->bind(commandBuffer);
+			SC.DS[i]->bind(commandBuffer, P, 0, currentImage);
+			vkCmdDrawIndexed(commandBuffer,
+				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
+		}
 
-				// draw not transparent objects
-				for(int i = 0; i < SC.InstanceCount; i++) {
-					std::string instanceId = *SC.I[i].id;
-					bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
-					if(shouldBeTransparent) continue;
-					P.bind(commandBuffer);
-					SC.M[SC.I[i].Mid]->bind(commandBuffer);
-					SC.DS[i]->bind(commandBuffer, P, 0, currentImage);
-					vkCmdDrawIndexed(commandBuffer,
-						static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
-				}
-
-				// draw transparent objects
-				for(int i = 0; i < SC.InstanceCount; i++) {
-					std::string instanceId = *SC.I[i].id;
-					bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
-					if(!shouldBeTransparent) continue;
-					P_Transparent.bind(commandBuffer);
-					SC.M[SC.I[i].Mid]->bind(commandBuffer);
-					SC.DS[i]->bind(commandBuffer, P_Transparent, 0, currentImage);
-					vkCmdDrawIndexed(commandBuffer,
-						static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
-				}
+		// draw transparent objects
+		for(int i = 0; i < SC.InstanceCount; i++) {
+			std::string instanceId = *SC.I[i].id;
+			bool shouldBeTransparent = (transparentObjects.find(instanceId) != transparentObjects.end());
+			if(!shouldBeTransparent) continue;
+			P_Transparent.bind(commandBuffer);
+			SC.M[SC.I[i].Mid]->bind(commandBuffer);
+			SC.DS[i]->bind(commandBuffer, P_Transparent, 0, currentImage);
+			vkCmdDrawIndexed(commandBuffer,
+				static_cast<uint32_t>(SC.M[SC.I[i].Mid]->indices.size()), 1, 0, 0, 0);
+		}
 
 		// Draw UI icons
 		IR.populateCommandBuffer(commandBuffer, currentImage, objIds[selectedObj]);
@@ -404,35 +363,27 @@ void handleInput() {
 		bool fire = false;
 		getSixAxis(deltaT, m, r, fire);
 
-		const float ROT_SPEED = glm::radians(360.0f);
-		const float MOVE_SPEED = 10.0f;
 		int objectId = SC.InstanceIds["obj"];
-		static float lookAng = 0;
-		static float DlookAng = 0;
-		static int subpass = 0;
-		static float subpassTimer = 0.0f;
 
 		// First person mode input and camera update
 		constexpr float GRID_SIZE = 2.0f;
-		float forwardAngle = 0.0f;
-		glm::vec3 forwardDir(0.0f);
-		if (!firstPersonMode) {
-			lookAng -= r.y * ROT_SPEED * deltaT;
-			lookAng = (lookAng < -3.1416) ? lookAng + 2*3.1416 : ((lookAng > 3.1416) ? lookAng - 2*3.1416 : lookAng);
-			DlookAng = lookAng;
-			forwardAngle = glm::half_pi<float>() * std::round(DlookAng / glm::half_pi<float>());
-			forwardDir = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(0,0,-1.0f,0));
-			glm::vec3 rightDir   = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(1.0f,0,0,0));
-			glm::vec3 upDir = glm::vec3(glm::rotate(glm::mat4(1), forwardAngle, glm::vec3(0,1,0)) * glm::vec4(0, 1.0f, 0, 0));
-
+		if (!firstPersonMode){
 			static float movementTimer = 0.0f;
-			static glm::vec3 prevMoveDir = glm::vec3(0.0f);
+			static glm::vec3 prevMoveDir = glm::vec3(0.0f); //previous movement direction
 			const float MOVEMENT_DIFF = 0.1f; //time between movements
-			//lambda function to handle movement, given pressed key and direction
-			auto stepMove = [&](const glm::vec3 &dir) {
-				if(glm::length(dir) > 0.0f) {
+			movementTimer -= deltaT;
+			if(movementTimer < 0.0f) movementTimer = 0.0f;
+
+			// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
+			if(glm::length(m) > 0.0f) {
+				//movement time elapsed or direction changed
+				if(movementTimer <= 0.0f || m != prevMoveDir) {
+					//if still pressing
+					if(glm::length(m) > 0.0f) {
+					//reset timer
 					movementTimer = MOVEMENT_DIFF;
-					glm::vec3 newPos = Pos + dir * GRID_SIZE;
+					//change pos
+					glm::vec3 newPos = Pos + m * GRID_SIZE;
 					newPos = glm::vec3(
 						GRID_SIZE * std::round(newPos.x / GRID_SIZE),
 						std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
@@ -440,23 +391,13 @@ void handleInput() {
 					);
 					Pos = newPos;
 				}
-			};
-			movementTimer -= deltaT;
-			if(movementTimer < 0.0f) movementTimer = 0.0f;
-
-			// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
-			if(glm::length(m) > 0.0f) {
-				if(movementTimer <= 0.0f || m != prevMoveDir) {
-					stepMove(m);
 				}
 			}
 			prevMoveDir = m;
 
-			glm::vec3 objectPos = Pos;
-
 			// Update object rotation
 			float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
-			SC.I[objectId].Wm = glm::translate(glm::mat4(1), objectPos) * glm::rotate(glm::mat4(1), objectRot, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
+			SC.I[objectId].Wm = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1), objectRotation, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
 		} else {
 			// WASD movement
 			glm::vec3 moveDir(0.0f);
@@ -574,6 +515,7 @@ void handleInput() {
 			{
 				debounce = true;
 				curDebounce = GLFW_KEY_N;
+				//to wrap around the objIds vector
 				selectedObj = (selectedObj + objIds.size() - 1) % objIds.size();
 				std::cout << "Selected object: " << objIds[selectedObj] << "\n";
 
@@ -602,6 +544,7 @@ void handleInput() {
 			{
 				debounce = true;
 				curDebounce = GLFW_KEY_M;
+				//updating selected object
 				selectedObj = (selectedObj + 1) % objIds.size();
 				std::cout << "Selected object: " << objIds[selectedObj] << "\n";
 
@@ -699,7 +642,7 @@ void handleInput() {
 				curDebounce = 0;
 			}
 		}
-				// Save/load placed objects with K/L (debounced)
+			// Save/load placed objects with K/L (debounced)
 		if (glfwGetKey(window, GLFW_KEY_K)) {
 			if (!debounce) {
 				debounce = true;
@@ -724,6 +667,7 @@ void handleInput() {
 				curDebounce = 0;
 			}
 		}
+
 		if (glfwGetKey(window, GLFW_KEY_P))
 		{
 			if (!debounce)
@@ -754,6 +698,7 @@ void handleInput() {
 		glm::mat4 ViewPrj;
 		glm::mat4 Mv;
 		if (firstPersonMode) {
+			// First person view, FOVy, aspect ratio, near/far planes
 			glm::mat4 proj = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 300.0f);
 			proj[1][1] *= -1;
 			Mv = glm::lookAt(fpCameraPos, fpCameraPos + fpCameraFront, fpCameraUp);
@@ -771,7 +716,6 @@ void handleInput() {
 		}
 		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.eyeDir = glm::vec4(0);
 
 		for(int i = 0; i < SC.InstanceCount; i++) {
 			ubo.mMat = SC.I[i].Wm * baseTr;
@@ -780,11 +724,6 @@ void handleInput() {
 			SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
 			SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
-		ubo.mMat = baseTr;
-		ubo.mvpMat = ViewPrj * ubo.mMat;
-		ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-		DS1.map(currentImage, &ubo, sizeof(ubo), 0);
-		DS1.map(currentImage, &gubo, sizeof(gubo), 2);
 	}
 };
 
