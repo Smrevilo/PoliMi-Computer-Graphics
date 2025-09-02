@@ -367,23 +367,23 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			movementTimer -= deltaT;
 			if(movementTimer < 0.0f) movementTimer = 0.0f;
 
-			// Improved debounce: move every MOVEMENT_DIFF when holding, move instantly on direction change
+			//move every MOVEMENT_DIFF when holding
 			if(glm::length(m) > 0.0f) {
 				//movement time elapsed or direction changed
 				if(movementTimer <= 0.0f || m != prevMoveDir) {
-					//if still pressing
-					if(glm::length(m) > 0.0f) {
-					//reset timer
-					movementTimer = MOVEMENT_DIFF;
-					//change pos
-					glm::vec3 newPos = Pos + m * GRID_SIZE;
-					newPos = glm::vec3(
-						GRID_SIZE * std::round(newPos.x / GRID_SIZE),
-						std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
-						GRID_SIZE * std::round(newPos.z / GRID_SIZE)
-					);
-					Pos = newPos;
-				}
+						//if still pressing
+						if(glm::length(m) > 0.0f) {
+						//reset timer
+						movementTimer = MOVEMENT_DIFF;
+						//change pos
+						glm::vec3 newPos = Pos + m * GRID_SIZE;
+						newPos = glm::vec3(
+							GRID_SIZE * std::round(newPos.x / GRID_SIZE),
+							std::max(0.0f, GRID_SIZE * std::round(newPos.y / GRID_SIZE)),
+							GRID_SIZE * std::round(newPos.z / GRID_SIZE)
+						);
+						Pos = newPos;
+					}
 				}
 			}
 			prevMoveDir = m;
@@ -391,7 +391,8 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			// Update object rotation
 			float objectRot = glm::half_pi<float>() * std::round(objectRotation / glm::half_pi<float>());
 			SC.I[objectId].Wm = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1), objectRotation, glm::vec3(0,1,0)) * glm::scale(glm::mat4(1), InitialScale);
-		} else {
+		} 
+		else {
 			// WASD movement
 			glm::vec3 moveDir(0.0f);
 			if (isKeyPressed(GLFW_KEY_W)) moveDir += fpCameraFront;
@@ -430,7 +431,6 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				if(!placedObjects[posKey].empty()) {
 					std::cout << "Removing object at: " << Pos.x << ", " << Pos.y << ", " << Pos.z << "\n";
 
-					// Ensure GPU is idle so we don't destroy buffers still in use
 					vkDeviceWaitIdle(device);
 					SC.removeInstance(placedObjects[posKey]);
 					placedObjects.erase(posKey);
@@ -605,14 +605,28 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				firstPersonMode = !firstPersonMode;
 			// Optionally reset camera position/orientation
 				if (firstPersonMode) {
-				fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
+					fpCameraPos = glm::vec3(0.0f, 5.0f, 5.0f);
 					fpCameraYaw = -90.0f;
 					fpCameraPitch = 0.0f;
 					mouseInitialized = false;
 					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+					//add ceiling
+					glm::mat4 objTr = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+					SC.addInstance("top", SC.MeshIds["top"], SC.TextureIds["top"], objTr, DSL);
+					
 				} else {
 					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+					//remove ceiling
+					vkDeviceWaitIdle(device);
+					SC.removeInstance("top");
 				}
+				vkDeviceWaitIdle(device);
+				vkFreeCommandBuffers(device, commandPool,
+									static_cast<uint32_t>(commandBuffers.size()),
+									commandBuffers.data());
+				createCommandBuffers();
 			}
 		}
 		else
@@ -688,7 +702,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		} else {
 			glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
 			M[1][1] *= -1;
-			glm::vec3 cameraOffset = glm::vec3(-35.0f, 70.0f, 35.0f);
+			glm::vec3 cameraOffset = glm::vec3(-30.0f, 70.0f, 30.0f);
 			cameraOffset = cameraOffset * glm::mat3(0.8f);
 			glm::vec3 cameraPos = Pos * glm::vec3(1.0f, 0.0f, 1.0f) + cameraOffset;
 			Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
