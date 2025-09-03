@@ -708,7 +708,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 
 			ubo.specularStrength = 1.0f;
-            if(SC.I[i].id && *SC.I[i].id == "floor") {
+            if(SC.I[i].id && (*SC.I[i].id == "floor" || *SC.I[i].id == "top" || *SC.I[i].id == "wall")) {
                 ubo.specularStrength = 0.1f;
             }
 			SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
