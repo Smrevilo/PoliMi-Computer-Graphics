@@ -170,7 +170,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		windowHeight = 600;
         windowTitle = "Modular Hospital Ward Planner";
     	windowResizable = GLFW_TRUE;
-		initialBackgroundColor = {1.0f, 1.0f, 1.0f, 1.0f};
+		initialBackgroundColor = {0.3f, 0.90f, 1.0f, 1.0f};
 
 		// Descriptor pool sizes
 		// allow for many dynamically spawned objects
