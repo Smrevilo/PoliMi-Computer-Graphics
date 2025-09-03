@@ -454,11 +454,6 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				}
 				// Re-record command buffers so the new instance
 				// is included in the rendering pipeline
-				vkDeviceWaitIdle(device);
-				vkFreeCommandBuffers(device, commandPool,
-									static_cast<uint32_t>(commandBuffers.size()),
-									commandBuffers.data());
-				createCommandBuffers();
 			}
 		} else if((curDebounce == GLFW_KEY_SPACE) && debounce) {
 			debounce = false;
@@ -515,7 +510,6 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
 				SC.updateInstance("obj", SC.MeshIds[objIds[selectedObj]],
 								  SC.TextureIds[objIds[selectedObj]], DSL);
-
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()),
 									 commandBuffers.data());
@@ -622,11 +616,13 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 					vkDeviceWaitIdle(device);
 					SC.removeInstance("top");
 				}
+				/*
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool,
 									static_cast<uint32_t>(commandBuffers.size()),
 									commandBuffers.data());
 				createCommandBuffers();
+				*/
 			}
 		}
 		else
@@ -683,6 +679,10 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 		// Standard procedure to quit when the ESC key is pressed
 		if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+			vkDeviceWaitIdle(device);
+			vkFreeCommandBuffers(device, commandPool,
+									static_cast<uint32_t>(commandBuffers.size()),
+									commandBuffers.data());
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
 
