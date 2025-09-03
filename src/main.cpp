@@ -174,7 +174,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 		// Descriptor pool sizes
 		// allow for many dynamically spawned objects
-		uniformBlocksInPool = 2000;
+		uniformBlocksInPool = 1000;
 		texturesInPool = 1000;
 		setsInPool = 1000;
 

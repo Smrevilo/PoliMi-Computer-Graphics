@@ -65,9 +65,9 @@
 					   0, 0, 0, 1]
 		},
 		{"id": "floor",   "model": "floor",   "texture": "floor",
-			"transform": [0.1, 0, 0, 0,
-				0, 0.1, 0, 0,
-				0, 0, 0.1, 0,
+			"transform": [1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
 				0, 0, 0, 1]
 		},
 		{"id": "wall",   "model": "wall",   "texture": "wall",
