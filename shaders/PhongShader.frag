@@ -11,7 +11,7 @@ layout(binding = 0) uniform UniformBufferObject { // Uniform buffer for object-s
 	mat4 mvpMat; // Model-View-Projection matrix
 	mat4 mMat; // Model matrix
 	mat4 nMat; // Normal matrix
-	vec4 color; // Base color of the object
+	float specularStrength;
 } ubo;
 
 layout(binding = 1) uniform sampler2D texSampler; // Sampler for the texture
@@ -28,22 +28,22 @@ void main() {
 	vec3 EyeDir = normalize(gubo.eyePos - fragPos); // Compute the direction from the fragment to the eye
 	//Norm = dot(Norm, gubo.lightDir) > 0 ? Norm : -Norm; // Uncomment to flip normal if needed
 	
-	vec3 Albedo = ubo.color.rgb * ubo.color.a + texture(texSampler, fragTexCoord).rgb * (1 - ubo.color.a);
+	vec3 Albedo =  texture(texSampler, fragTexCoord).rgb;
 	vec3 Diffuse = Albedo * max(dot(Norm, -gubo.lightDir),0.0f);
 	vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(gubo.lightDir, Norm)),0.0f), 160.0f));
 
-	const vec3 cxp = vec3(1.0,0.5,0.5) * 0.2;
-	const vec3 cxn = vec3(0.9,0.6,0.4) * 0.2;
+	const vec3 cxp = vec3(1.0,1.0,1.0) * 0.2;
+	const vec3 cxn = vec3(1.0,1.0,1.0) * 0.2;
 	const vec3 cyp = vec3(0.3,1.0,1.0) * 0.2;
 	const vec3 cyn = vec3(0.5,0.5,0.5) * 0.2;
-	const vec3 czn = vec3(0.8,0.2,0.4) * 0.2;
-	const vec3 czp = vec3(0.3,0.6,0.7) * 0.2;
+	const vec3 czn = vec3(1.0,1.0,1.0) * 0.2;
+	const vec3 czp = vec3(1.0,1.0,1.0) * 0.2;
 	
 	vec3 Ambient =((Norm.x > 0 ? cxp : cxn) * (Norm.x * Norm.x) +
 				   (Norm.y > 0 ? cyp : cyn) * (Norm.y * Norm.y) +
 				   (Norm.z > 0 ? czp : czn) * (Norm.z * Norm.z))* Albedo;
-	
-	outColor = vec4((Diffuse + Specular) * gubo.lightColor.rgb + Ambient, 1.0f);
+
+	outColor = vec4((Diffuse + Specular * ubo.specularStrength) * gubo.lightColor.rgb + Ambient, 1.0f);
 //	outColor = vec4(Ambient, 1.0f);
 
 }

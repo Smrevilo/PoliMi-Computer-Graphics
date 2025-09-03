@@ -6,7 +6,7 @@ layout(binding = 0) uniform UniformBufferObject {
 	mat4 mvpMat; // Model-View-Projection matrix for transforming vertices to clip space
 	mat4 mMat; // Model matrix for transforming vertices to world space
 	mat4 nMat; // Normal matrix for transforming normals to world space 
-	vec4 color; // Color information (not used in this shader)
+	float specularStrength;
 } ubo;
 
 // Define input attributes from the vertex buffer

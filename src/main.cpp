@@ -15,6 +15,7 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 mvpMat;
 	alignas(16) glm::mat4 mMat;
 	alignas(16) glm::mat4 nMat;
+	alignas(4) float specularStrength;
 };
 
 struct GlobalUniformBufferObject {
@@ -222,21 +223,12 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		SC.init(this, &VD, DSL, P, "assets/models/scene.json");
 
 		// Init local variables
-		Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
-		objIds = {"potted1", "potted2",
-
-                             "aircondition", "bed", "bulletinboard", "cabinet",
-                             "closestool", "curtain", "door1", "door2", "door3",
-                             "nursesstation", "pc", "poster", "shelf", "socket",
-                             "sofa", "tv", "top", "trashcan", "wardrobe", "window"};
-
-		objectScale = {{"potted1",0.15f},{"potted2",0.15f},{"aircondition",0.12f},
-		{"bed",0.1f},{"bulletinboard",0.12f},{"cabinet",0.12f},{"closestool",0.12f},
-		{"curtain",0.1f},{"door1",0.1f},{"door2",0.1f},{"door3",0.1f},{"nursesstation",0.1f},
-		{"pc",0.1f},{"poster",0.15f},{"shelf",0.1f},{"socket",0.1f},{"sofa",0.12f},{"tv",0.1f},
-		{"top",0.01f},{"trashcan",0.1f},{"wardrobe",0.1f},{"window",0.1f}};
-
-		InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+                Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
+                objIds = SC.ModelIds;
+                objectScale = SC.ModelScales;
+                if(!objIds.empty()) {
+                        InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+                }
 
 		IR.init(this,
 				 {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
@@ -714,6 +706,11 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			ubo.mMat = SC.I[i].Wm * baseTr;
 			ubo.mvpMat = ViewPrj * ubo.mMat;
 			ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+			ubo.specularStrength = 1.0f;
+            if(SC.I[i].id && *SC.I[i].id == "floor") {
+                ubo.specularStrength = 0.1f;
+            }
 			SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
 			SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}

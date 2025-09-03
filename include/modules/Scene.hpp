@@ -15,9 +15,11 @@ class Scene {
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
 	// Models
-	int ModelCount = 0;
-	Model<Vertex> **M;
-	std::unordered_map<std::string, int> MeshIds;
+        int ModelCount = 0;
+        Model<Vertex> **M;
+        std::unordered_map<std::string, int> MeshIds;
+        std::vector<std::string> ModelIds;
+        std::unordered_map<std::string, float> ModelScales;
 
 	// Textures
 	int TextureCount = 0;
@@ -51,14 +53,19 @@ class Scene {
 			ModelCount = ms.size();
 			std::cout << "Models count: " << ModelCount << "\n";
 
-			M = (Model<Vertex> **)calloc(ModelCount, sizeof(Model<Vertex> *));
-			for(int k = 0; k < ModelCount; k++) {
-				MeshIds[ms[k]["id"]] = k;
-				std::string MT = ms[k]["format"].template get<std::string>();
-				M[k] = new Model<Vertex>();
+                        M = (Model<Vertex> **)calloc(ModelCount, sizeof(Model<Vertex> *));
+                        for(int k = 0; k < ModelCount; k++) {
+                                std::string id = ms[k]["id"];
+                                MeshIds[id] = k;
+                                std::string MT = ms[k]["format"].template get<std::string>();
+                                M[k] = new Model<Vertex>();
 
-				M[k]->init(BP, VD, ms[k]["model"], (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG));
-			}
+                                M[k]->init(BP, VD, ms[k]["model"], (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG));
+                                if(ms[k].contains("scale")) {
+                                        ModelIds.push_back(id);
+                                        ModelScales[id] = ms[k]["scale"];
+                                }
+                        }
 			
 			// TEXTURES
 			nlohmann::json ts = js["textures"];
