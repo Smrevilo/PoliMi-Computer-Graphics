@@ -7,12 +7,6 @@ layout(location = 2) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 0) uniform UniformBufferObject {
-	mat4 mvpMat;
-	mat4 mMat;
-	mat4 nMat;
-} ubo;
-
 layout(binding = 1) uniform sampler2D texSampler;
 
 layout(binding = 2) uniform GlobalUniformBufferObject {
@@ -30,7 +24,6 @@ void main() {
 	vec3 Diffuse = Albedo * max(dot(Norm, -gubo.lightDir),0.0f);
 	vec3 Specular = vec3(pow(max(dot(EyeDir.xyz, -reflect(gubo.lightDir, Norm)),0.0f), 160.0f));
 
-	// A special type of non-uniform ambient color, invented for this course
 	const vec3 cxp = vec3(1.0,0.5,0.5) * 0.2;
 	const vec3 cxn = vec3(0.9,0.6,0.4) * 0.2;
 	const vec3 cyp = vec3(0.3,1.0,1.0) * 0.2;
@@ -42,10 +35,9 @@ void main() {
 				   (Norm.y > 0 ? cyp : cyn) * (Norm.y * Norm.y) +
 				   (Norm.z > 0 ? czp : czn) * (Norm.z * Norm.z))* Albedo;
 	
-	// Make the object semitransparent with enhanced colors for visibility
 	vec3 finalColor = (Diffuse + Specular) * gubo.lightColor.rgb + Ambient;
-	
-	finalColor = finalColor * 1.5 + Albedo * 0.3;
-	
-	outColor = vec4(finalColor, 0.8);
+	finalColor = finalColor * 1.2 + Albedo * 0.5;
+
+	//making it semitransparent
+	outColor = vec4(finalColor, 1.0) * mat4(0.7);
 }
