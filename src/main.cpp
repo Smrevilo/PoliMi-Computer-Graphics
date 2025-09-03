@@ -56,7 +56,10 @@ class ModularHospitalWardPlanner : public BaseProject {
 	// Pipelines [Shader couples]
 	Pipeline P;
 	Pipeline P_Transparent;
-	
+
+	RenderPass RP;
+	RenderPass RP_Shadowmap;
+
 	// Descriptor sets
 	DescriptorSet DS1;
 
@@ -145,7 +148,7 @@ void loadPlacedObjects(const std::string& filename = "placed_objects.txt") {
 	}
 	vkDeviceWaitIdle(device);
 	vkFreeCommandBuffers(device, commandPool,
-						static_cast<uint32_t>(commandBuffers.size()),
+						static_cast<uint32_t>(commandBuffer.size()),
 						commandBuffers.data());
 	createCommandBuffers();
 }
