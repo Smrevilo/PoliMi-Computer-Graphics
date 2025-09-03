@@ -234,11 +234,11 @@ void handleInput() {
 				});
 
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/SimpleVert.spv", "shaders/SimpleFrag.spv", {&DSL});
+		P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_NONE, false);
 		
-		P_Transparent.init(this, &VD, "shaders/SimpleVert.spv", "shaders/TransparentFrag.spv", {&DSL});
+		P_Transparent.init(this, &VD, "shaders/PhongVert.spv", "shaders/TransparentFrag.spv", {&DSL});
 		P_Transparent.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_BACK_BIT, true);  // back face culling + true enables blending for transparency
 
@@ -360,9 +360,9 @@ void handleInput() {
 		// Draw M1 model (floor/ground) - always use filled pipeline
 		P.bind(commandBuffer);
 		DS1.bind(commandBuffer, P, 0, currentImage);
-		M1.bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
+		//M1.bind(commandBuffer);
+		//vkCmdDrawIndexed(commandBuffer,
+		//		static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 
 				// Ensure the preview object (id == "obj") is always transparent
 				transparentObjects.insert("obj");
@@ -732,7 +732,7 @@ void handleInput() {
 			ViewPrj = M * Mv;
 			gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
 		}
-		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
+		gubo.lightDir = glm::vec3(cos(glm::radians(45.0f)), sin(glm::radians(45.0f)), 0.0f);
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		gubo.eyeDir = glm::vec4(0);
 
