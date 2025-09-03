@@ -223,12 +223,13 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		SC.init(this, &VD, DSL, P, "assets/models/scene.json");
 
 		// Init local variables
-                Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
-                objIds = SC.ModelIds;
-                objectScale = SC.ModelScales;
-                if(!objIds.empty()) {
-                        InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
-                }
+        Pos = glm::vec3(SC.I[SC.InstanceIds["obj"]].Wm[3]);
+        objIds = SC.ModelIds;
+		objIds.erase(std::remove(objIds.begin(), objIds.end(), "top"), objIds.end());
+        objectScale = SC.ModelScales;
+        if(!objIds.empty()) {
+                InitialScale = glm::vec3(objectScale[objIds[selectedObj]]);
+        }
 
 		IR.init(this,
 				 {{"potted1", "assets/Icons/M_PottedPlant_01.png"},
@@ -249,7 +250,6 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				  {"socket", "assets/Icons/M_Socket_01.png"},
 				  {"sofa", "assets/Icons/M_Sofa_01.png"},
 				  {"tv", "assets/Icons/M_TV_01.png"},
-				  {"top", "assets/Icons/M_Top_01.png"},
 				  {"trashcan", "assets/Icons/M_TrashCan_01.png"},
 				  {"wardrobe", "assets/Icons/M_Wardrobe_01.png"},
 				  {"window", "assets/Icons/M_Window_01.png"}},
