@@ -669,10 +669,6 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 		// Standard procedure to quit when the ESC key is pressed
 		if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-			vkDeviceWaitIdle(device);
-			vkFreeCommandBuffers(device, commandPool,
-									static_cast<uint32_t>(commandBuffers.size()),
-									commandBuffers.data());
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
 
