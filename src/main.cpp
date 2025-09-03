@@ -709,7 +709,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			ViewPrj = M * Mv;
 			gubo.eyePos = glm::vec3(glm::inverse(Mv) * glm::vec4(0,0,0,1));
 		}
-		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
+		gubo.lightDir = glm::vec3(cos(glm::radians(45.0f)), sin(glm::radians(45.0f)), 0.0f);
 		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 		for(int i = 0; i < SC.InstanceCount; i++) {
