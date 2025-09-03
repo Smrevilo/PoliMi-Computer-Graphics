@@ -616,13 +616,11 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 					vkDeviceWaitIdle(device);
 					SC.removeInstance("top");
 				}
-				/*
 				vkDeviceWaitIdle(device);
 				vkFreeCommandBuffers(device, commandPool,
 									static_cast<uint32_t>(commandBuffers.size()),
 									commandBuffers.data());
 				createCommandBuffers();
-				*/
 			}
 		}
 		else
