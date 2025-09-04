@@ -100,49 +100,54 @@ void savePlacedObjects(const std::string& filename = "placed_objects.txt") {
 		return;
 	}
 	for (const auto& [coord, id] : placedObjects) {
-		file << id << " " << std::get<0>(coord) << " " << std::get<1>(coord) << " " << std::get<2>(coord) << "\n";
+		if(id.find("_spawn_") == std::string::npos) continue;
+		glm::mat4 objTransform = SC.I[SC.InstanceIds[id]].Wm;
+		file << id << " ";
+		for(int i = 0; i < 4; i++){
+			for(int j = 0; j < 4; j++){
+
+				file << ((objTransform[i][j] < 0.001 && objTransform[i][j] > -0.001) ? 0.0f : objTransform[i][j]) << " ";
+			}
+		}
+		file << "\n";
 	}
+
 }
 void loadPlacedObjects(const std::string& filename = "placed_objects.txt") {
-	//remove all previously spawned instances to avoid duplicates
-	{
-		std::vector<std::string> toRemove;
-		toRemove.reserve(SC.InstanceCount);
-		for (int i = 0; i < SC.InstanceCount; ++i) {
-			if (SC.I[i].id && SC.I[i].id->find("_spawn_") != std::string::npos) {
-				toRemove.push_back(*SC.I[i].id);
-			}
+	
+	std::vector<std::string> toRemove;
+	toRemove.reserve(SC.InstanceCount);
+	for (int i = 0; i < SC.InstanceCount; ++i) {
+		if (SC.I[i].id && SC.I[i].id->find("_spawn_") != std::string::npos) {
+			toRemove.push_back(*SC.I[i].id);
 		}
-		if (!toRemove.empty()) {
-			vkDeviceWaitIdle(device);
-			for (const auto& rid : toRemove) {
-				SC.removeInstance(rid);
-			}
+	}
+	if (!toRemove.empty()) {
+		vkDeviceWaitIdle(device);
+		for (const auto& rid : toRemove) {
+			SC.removeInstance(rid);
 		}
 	}
 
-	placedObjects.clear();
 
+	placedObjects.clear();
+	
 	std::ifstream file(filename);
 	std::string line;
 	while (std::getline(file, line)) {
 		std::istringstream iss(line);
 		std::string id;
-		int x, y, z;
-		if (iss >> id >> x >> y >> z) {
-			std::cout << "Loading object id: " << id << " at position (" << x << ", " << y << ", " << z << ")\n";
-			std::string baseId = id.substr(0, id.find("_spawn_"));
-			float scale = 0.2f;
-			auto sit = objectScale.find(baseId);
-			if(sit != objectScale.end()) scale = sit->second;
-			float objRot = 0.0f;
-			glm::mat4 objTr = glm::translate(glm::mat4(1), glm::vec3(x, y, z)) *
-						 glm::rotate(glm::mat4(1), objRot, glm::vec3(0,1,0)) *
-						 glm::scale(glm::mat4(1), glm::vec3(scale));
-			std::string newId = baseId + "_spawn_" + std::to_string(spawnCounter++);
-			SC.addInstance(newId, SC.MeshIds[baseId], SC.TextureIds[baseId], objTr, DSL);
-			placedObjects[{x, y, z}] = newId;
+		glm::mat4 transform;
+		if(!(iss >> id)) continue;
+		for(int i = 0; i < 4; i++){
+			for(int j = 0; j < 4; j++){
+				iss >> transform[i][j];
+			}
 		}
+		std::string baseId = id.substr(0, id.find("_spawn_"));
+		std::string newId = baseId + "_spawn_" + std::to_string(spawnCounter++);
+		SC.addInstance(newId, SC.MeshIds[baseId], SC.TextureIds[baseId], transform, DSL);
+		placedObjects[std::make_tuple(transform[3][0], transform[3][1], transform[3][2])] = newId;
 	}
 	vkDeviceWaitIdle(device);
 	vkFreeCommandBuffers(device, commandPool,
@@ -450,8 +455,6 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 					SC.addInstance(id, SC.MeshIds[pId], SC.TextureIds[pId], objTr, DSL);
 					placedObjects[posKey] = id;
 				}
-				// Re-record command buffers so the new instance
-				// is included in the rendering pipeline
 			}
 		} else if((curDebounce == GLFW_KEY_SPACE) && debounce) {
 			debounce = false;
@@ -556,7 +559,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		static bool placedRedTexture = false;
 		static std::string lastRedId;
 		static std::string lastRedBaseId;
-		std::string currentId = placedObjects[{Pos.x, Pos.y, Pos.z}];
+		std::string currentId = placedObjects[std::make_tuple(Pos.x, Pos.y, Pos.z)];
 		std::string currentBaseId;
 		if (!currentId.empty() && (!placedRedTexture || lastRedId != currentId)) {
 			//retrieving the base id of the object 
@@ -663,7 +666,7 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			}
 		}
 
-			// Save/load placed objects with K/L (debounced)
+			// Save/load placed objects with K/L, delete all with J
 		if (glfwGetKey(window, GLFW_KEY_K)) {
 			if (!debounce) {
 				debounce = true;
@@ -684,6 +687,19 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 			}
 		} else {
 			if ((curDebounce == GLFW_KEY_L) && debounce) {
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+		if (glfwGetKey(window, GLFW_KEY_J)) {
+			if (!debounce) {
+				debounce = true;
+				curDebounce = GLFW_KEY_J;
+				std::remove("placed_objects.txt");
+				loadPlacedObjects("placed_objects.txt");
+			}
+		} else {
+			if ((curDebounce == GLFW_KEY_J) && debounce) {
 				debounce = false;
 				curDebounce = 0;
 			}
