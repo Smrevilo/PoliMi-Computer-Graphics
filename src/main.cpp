@@ -342,11 +342,17 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	void updateUniformBuffer(uint32_t currentImage) {
 		static bool debounce = false;
 		static int curDebounce = 0;
+		static bool invertedView = false;
+
 
 		float deltaT;
 		glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
 		bool fire = false;
 		getSixAxis(deltaT, m, r, fire);
+		if(invertedView){
+			m.x = -m.x;
+			m.z = -m.z;
+		}
 
 		int objectId = SC.InstanceIds["obj"];
 
@@ -623,6 +629,40 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 				curDebounce = 0;
 			}
 		}
+		if(glfwGetKey(window, GLFW_KEY_LEFT)){
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_LEFT;
+				invertedView = !invertedView;
+
+			}
+		}
+		else{
+			if ((curDebounce == GLFW_KEY_LEFT) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
+		if(glfwGetKey(window, GLFW_KEY_RIGHT)){
+			if (!debounce)
+			{
+				debounce = true;
+				curDebounce = GLFW_KEY_RIGHT;
+				invertedView = !invertedView;
+
+			}
+		}
+		else{
+			if ((curDebounce == GLFW_KEY_RIGHT) && debounce)
+			{
+				debounce = false;
+				curDebounce = 0;
+			}
+		}
+
 			// Save/load placed objects with K/L (debounced)
 		if (glfwGetKey(window, GLFW_KEY_K)) {
 			if (!debounce) {
@@ -688,7 +728,11 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		} else {
 			glm::mat4 M = glm::perspective(glm::radians(60.0f), Ar, 0.1f, 500.0f);
 			M[1][1] *= -1;
-			glm::vec3 cameraOffset = glm::vec3(-30.0f, 70.0f, 30.0f);
+			glm::vec3 cameraOffset;
+			if(!invertedView)
+				cameraOffset= glm::vec3(-30.0f, 70.0f, 30.0f);
+			else
+				cameraOffset = glm::vec3(30.0f, 70.0f, -30.0f);
 			cameraOffset = cameraOffset * glm::mat3(0.8f);
 			glm::vec3 cameraPos = Pos * glm::vec3(1.0f, 0.0f, 1.0f) + cameraOffset;
 			Mv = glm::lookAt(cameraPos, Pos, glm::vec3(0,1,0));
