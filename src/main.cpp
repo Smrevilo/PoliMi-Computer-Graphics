@@ -357,11 +357,11 @@ static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 		int objectId = SC.InstanceIds["obj"];
 
 		// First person mode input and camera update
-		constexpr float GRID_SIZE = 2.0f;
+		constexpr float GRID_SIZE = 1.0f;
 		if (!firstPersonMode){
 			static float movementTimer = 0.0f;
 			static glm::vec3 prevMoveDir = glm::vec3(0.0f); //previous movement direction
-			const float MOVEMENT_DIFF = 0.1f; //time between movements
+			const float MOVEMENT_DIFF = 0.05f; //time between movements
 			movementTimer -= deltaT;
 			if(movementTimer < 0.0f) movementTimer = 0.0f;
 
